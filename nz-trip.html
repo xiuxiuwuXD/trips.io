@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新西兰南岛 9天8晚 路线地图</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; display: flex; height: 100vh; color: #222; }
+  #sidebar { width: clamp(440px, 50vw, 820px); flex-shrink: 0; overflow-y: auto; padding: 16px; background: #fafafa; border-right: 1px solid #ddd; }
+  #map { flex: 1; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .sub { font-size: 13px; color: #666; margin-bottom: 12px; }
+  .legend { font-size: 12px; margin-bottom: 12px; line-height: 1.8; }
+  .legend span { display: inline-block; margin-right: 10px; }
+  .day { border-left: 5px solid; background: #fff; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .day h2 { font-size: 14px; margin: 0 0 6px; display: flex; justify-content: space-between; align-items: center; }
+  .day h2 label { font-size: 12px; font-weight: normal; color: #666; cursor: pointer; }
+  .day ul, .day ol { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
+  .day li { cursor: pointer; }
+  .day li:hover { text-decoration: underline; }
+  .stay { font-size: 12px; color: #555; margin-top: 4px; }
+  .gmap { display: inline-block; margin-top: 6px; font-size: 12px; padding: 4px 8px; border-radius: 4px; background: #1a73e8; color: #fff; text-decoration: none; }
+  .kmlbtn { margin: 6px 0 0 6px; font-size: 12px; padding: 4px 8px; border-radius: 4px; border: 1px solid #1a73e8; background: #fff; color: #1a73e8; cursor: pointer; }
+  .kmlbtn:hover, .kmlbtn:focus { background: #e8f0fe; outline: 2px solid #0b3d91; }
+  .gmap:hover, .gmap:focus { background: #155ab6; outline: 2px solid #0b3d91; }
+  td a { color: #1a73e8; }
+  .note { font-size: 11px; color: #888; margin-top: 12px; line-height: 1.5; }
+  .btns { margin-bottom: 12px; }
+  .btns button { font-size: 12px; padding: 4px 8px; margin-right: 6px; cursor: pointer; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
+  .tab { flex: 1; padding: 8px; border: 1px solid #ccc; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .tab.active { background: #1f6feb; color: #fff; border-color: #1f6feb; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .stat { background: #fff; border-radius: 6px; padding: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .stat b { display: block; font-size: 16px; color: #1f6feb; }
+  .stat span { font-size: 11px; color: #666; line-height: 1.4; }
+  h3 { font-size: 14px; margin: 16px 0 6px; }
+  .route { background: #fff; border-radius: 6px; padding: 8px; font-size: 13px; line-height: 1.7; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .route i { font-style: normal; font-size: 11px; color: #fff; background: #888; border-radius: 3px; padding: 0 4px; }
+  .hl { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; }
+  th, td { border: 1px solid #e3e3e3; padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { background: #f0f3f7; }
+  html[data-lang="zh"] [data-l="en"], html[data-lang="en"] [data-l="zh"] { display: none !important; }
+  .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .langbtn { font-size: 12px; padding: 4px 10px; border: 1px solid #1f6feb; border-radius: 14px; background: #fff; color: #1f6feb; cursor: pointer; white-space: nowrap; }
+  .langbtn:hover, .langbtn:focus { background: #e8f0fe; outline: 2px solid #0b3d91; }
+  @media (max-width: 800px) { body { flex-direction: column-reverse; } #sidebar { width: 100%; height: 60vh; } #map { height: 40vh; } }
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <div class="topbar">
+    <div>
+      <h1>🇳🇿 <span data-l="zh">南岛 9天8晚 自然风光自驾</span><span data-l="en">South Island 9-Day Scenic Road Trip</span></h1>
+      <div class="sub">2026/12/26 – 2027/1/3 · <span data-l="zh">皇后镇进出</span><span data-l="en">Queenstown return</span></div>
+    </div>
+    <button type="button" class="langbtn" id="langBtn" aria-label="Switch language / 切换语言" onclick="setLang(curLang === 'zh' ? 'en' : 'zh', true)">EN</button>
+  </div>
+  <div class="tabs">
+    <button class="tab active" data-tab="summary">📋 <span data-l="zh">总览</span><span data-l="en">Overview</span></button>
+    <button class="tab" data-tab="itinerary">🗓️ <span data-l="zh">每日行程</span><span data-l="en">Daily Plan</span></button>
+  </div>
+
+  <div id="tab-summary" class="panel">
+    <div data-l="zh">
+    <div class="stats">
+      <div class="stat"><b>9天8晚</b><span>12/26 9:50am 到达<br>1/3 8:30pm 起飞</span></div>
+      <div class="stat"><b>~800 km</b><span>自驾总里程<br>单日最长约 3.5h</span></div>
+      <div class="stat"><b>4 个住宿地</b><span>只换 3 次酒店</span></div>
+      <div class="stat"><b>2 次直升机</b><span>峡湾 + 冰川</span></div>
+    </div>
+
+    <h3>🗺️ 路线</h3>
+    <div class="route">皇后镇 <i>4晚</i> → Lake Tekapo <i>1晚</i> → Mt Cook <i>1晚</i> → Wanaka <i>2晚</i> → 皇后镇 ✈️</div>
+
+    <h3>⭐ 行程亮点</h3>
+    <ul class="hl">
+      <li>🚁 Milford Sound 直升机 + 游船（空中和水面两种视角）</li>
+      <li>❄️ Tasman Glacier 直升机冰川徒步</li>
+      <li>🥾 Roys Peak 经典山脊观景点（这次最大的徒步）</li>
+      <li>🥾 Diamond Lake、Queenstown Hill、Mt John、Hooker Valley 等徒步</li>
+      <li>🌌 好牧羊人教堂 + Mt John 暗夜保护区观星</li>
+      <li>🚡 Skyline 缆车 + Luge + 山顶自助晚餐</li>
+      <li>🛳️ TSS Earnslaw 蒸汽船 + Walter Peak 农场晚餐，返程看黄金时段</li>
+      <li>🎆 Mt Cook 跨年：Hermitage 自助餐 + 暗夜星空</li>
+      <li>🚤 Shotover Jet 峡谷飙船</li>
+      <li>🐟 Lake Pukaki 湖边三文鱼刺身野餐 · 📷 Peters Lookout</li>
+      <li>♨️ Onsen 峡谷温泉 / Tekapo Springs</li>
+      <li>📷 沿途观景点：Bennetts Bluff、Kawarau Gorge、Lindis Pass、Lake Ruataniwha、Peters Lookout、Crown Range</li>
+      <li>💜 Wanaka 薰衣草 · 🪞 Lake Hayes 倒影</li>
+    </ul>
+
+    <h3>📅 每日一览</h3>
+    <table>
+      <tr><th>天</th><th>日期</th><th>主题</th><th>住</th></tr>
+      <tr><td>1</td><td>12/26</td><td>到达，Skyline 缆车 + Luge + 山顶自助晚餐</td><td>皇后镇</td></tr>
+      <tr><td>2</td><td>12/27</td><td>Milford 直升机（可选 Onsen）</td><td>皇后镇</td></tr>
+      <tr><td>3</td><td>12/28</td><td>Glenorchy + Diamond Lake + 鲨鱼艇（Milford 备用日）</td><td>皇后镇</td></tr>
+      <tr><td>4</td><td>12/29</td><td>Queenstown Hill + 植物园 + 5pm Earnslaw 晚餐船（返程看黄金时段）</td><td>皇后镇</td></tr>
+      <tr><td>5</td><td>12/30</td><td>Kawarau Gorge → Lindis Pass → Lake Ruataniwha → Tekapo →（可选温泉）→ 教堂 → Mt John 观星团</td><td>Tekapo</td></tr>
+      <tr><td>6</td><td>12/31</td><td>Mt John 徒步 → Pukaki 三文鱼 → Peters Lookout → Hooker Valley → Hermitage 跨年自助餐</td><td>Mt Cook</td></tr>
+      <tr><td>7</td><td>1/1</td><td>Tasman Heli Hike → Twizel 三文鱼 → Wanaka</td><td>Wanaka</td></tr>
+      <tr><td>8</td><td>1/2</td><td>Roys Peak 观景点 → That Wanaka Tree 日落</td><td>Wanaka</td></tr>
+      <tr><td>9</td><td>1/3</td><td>薰衣草农场 → Lake Wanaka 早午餐 → Crown Range →（可选 Arrowtown）→ Lake Hayes → 起飞</td><td>—</td></tr>
+    </table>
+
+    <h3>📋 预订清单</h3>
+    <table>
+      <tr><th>优先级</th><th>项目（官网）</th><th>约 NZ$/人</th><th>改期 / 退款</th></tr>
+      <tr><td>🔴 现在</td><td><a href="https://www.hermitage.co.nz/stay" target="_blank" rel="noopener noreferrer">Mt Cook Village 住宿（12/31，跨年）</a></td><td>200-400/晚</td><td>看所订房型；NYE 套餐不可退。订普通房时选可免费取消的价格</td></tr>
+      <tr><td>🔴 现在</td><td><a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Lake Tekapo 住宿 ×1（12/30）</a></td><td>200-350/晚</td><td>看所订价格，选可免费取消的</td></tr>
+      <tr><td>🔴 尽早</td><td><a href="https://www.glaciersouthernlakes.co.nz/" target="_blank" rel="noopener noreferrer">Milford Fly-Cruise-Fly（推荐 Glacier Southern Lakes）</a></td><td>✅ 1,325</td><td>✅ 天气取消：改期或免费取消。自己取消：起飞 24 小时前全额退，24 小时内 100% 收费。飞行当天才扣款</td></tr>
+      <tr><td>🔴 尽早</td><td><a href="https://www.helicopter.co.nz/aoraki-mount-cook/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Tasman Glacier Heli Hike — The Helicopter Line（与 Alpine Guides 合作）</a></td><td>945（旅游局页面）</td><td>✅ 天气取消：可换到其他日期/基地，改不了就全额退。24 小时内更改或未到不退</td></tr>
+      <tr><td>（备选）</td><td><a href="https://www.mtcookskiplanes.com/tasman-heli-hike/" target="_blank" rel="noopener noreferrer">Tasman Heli Hike — Mount Cook Ski Planes &amp; Helicopters</a></td><td>✅ 899</td><td>✅ 提前 48 小时以上取消免费，48 小时内 100% 收费；天气取消会改期或退未使用部分；每团至少 4 人</td></tr>
+      <tr><td>（备选）</td><td><a href="https://www.alpineguides.co.nz/trips/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Tasman Heli Hike — Alpine Guides（含私人团）</a></td><td>待查</td><td>⚠️ 官网没找到取消政策，预订前问清楚</td></tr>
+      <tr><td>🟡 2周前</td><td><a href="https://queenstown.skyline.co.nz/pricing-and-packages" target="_blank" rel="noopener noreferrer">Skyline 缆车 + Luge + Stratosfare 晚餐</a></td><td>✅ 193-201（缆车+晚餐+3/6 次 Luge）</td><td>✅ 到访 48 小时前取消或改期可全额退</td></tr>
+      <tr><td>🟡 2周前</td><td><a href="https://darkskyproject.co.nz/experiences/the-summit-experience/" target="_blank" rel="noopener noreferrer">Mt John 观星团（Dark Sky Project，Day 5 晚）</a></td><td>✅ 239</td><td>✅ 直接订：出发 24 小时前全额退，24 小时内 100% 收费。天气无法观星：改期 / 3 年有效礼券 / 全额退</td></tr>
+      <tr><td>🔴 尽早</td><td><a href="https://www.hermitage.co.nz/christmas-new-year/new-years-eve-at-the-hermitage" target="_blank" rel="noopener noreferrer">Hermitage Alpine 跨年夜自助餐（8:30pm 后）</a></td><td>165</td><td>✅ ❌ 不可退款、不可转让（邮件订位）</td></tr>
+      <tr><td>🟡 2周前</td><td><a href="https://www.shotoverjet.com/" target="_blank" rel="noopener noreferrer">Shotover Jet</a></td><td>✅ 199</td><td>✅ 24 小时前可免费改期或取消；24 小时内最高 100% 收费；运营方取消整趟才退</td></tr>
+      <tr><td>🟡 2周前</td><td><a href="https://www.realnz.com/en/experiences/tss-earnslaw-walter-peak-experiences/walter-peak-gourmet-bbq-dining/" target="_blank" rel="noopener noreferrer">TSS Earnslaw + Walter Peak 晚餐（RealNZ，Day 4 5pm 班）</a></td><td>✅ 175 起</td><td>✅ 出发 24 小时前通知才可退款或更改</td></tr>
+      <tr><td>🟡 尽早</td><td><a href="https://www.onsen.co.nz/" target="_blank" rel="noopener noreferrer">Onsen Hot Pools（Day 2，可选；常常订满）</a></td><td>✅ 122 起（包场，最多 4 人）</td><td>✅ 至少提前 24 小时改期或取消，否则 100% 收费；改期看空位</td></tr>
+      <tr><td>🟢 不用订</td><td><a href="https://tekaposprings.co.nz/" target="_blank" rel="noopener noreferrer">Tekapo Springs 温泉（Day 5，可选）</a></td><td>42（旅游局页面）</td><td>✅ 温泉不需要预订，直接去</td></tr>
+      <tr><td>🟢 不用订</td><td><a href="https://www.wanakalavenderfarm.com/plan-your-visit" target="_blank" rel="noopener noreferrer">Wanaka Lavender Farm（Day 9）</a></td><td>15</td><td>✅ 9-5 月每天 9am-5pm 开，圣诞节休息；现场买票</td></tr>
+      <tr><td>🟢 尽早</td><td><a href="https://www.rentalcars.com" target="_blank" rel="noopener noreferrer">租车 SUV（机场取还）</a></td><td>800-1200 总</td><td>看租车公司，选可免费取消的</td></tr>
+      <tr><td>🟢 提前</td><td><a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">皇后镇 ×4、Wanaka ×2 住宿</a></td><td>150-250/晚</td><td>看所订价格，选可免费取消的</td></tr>
+    </table>
+    <div class="note">✅ = 已在官网核实（2026-10-04）；其他是一般建议。订之前再看一次官网条款，第三方平台（Klook、Viator 等）的政策可能不同。</div>
+
+    <h3>💰 预算估算（2 人，NZ$）</h3>
+    <table>
+      <tr><th>类别</th><th>2 人合计</th></tr>
+      <tr><td>🏨 住宿 8 晚（旺季，估算）</td><td>1,790 – 3,000</td></tr>
+      <tr><td>🚗 租车 SUV 9 天 + 油费（估算）</td><td>1,150 – 1,750</td></tr>
+      <tr><td>🚁 Milford Fly-Cruise-Fly ✅ $1,325/人</td><td>2,650</td></tr>
+      <tr><td>❄️ Tasman Heli Hike $899-945/人</td><td>1,800 – 1,890</td></tr>
+      <tr><td>🚡 Skyline 缆车 + 晚餐 + Luge ✅ $193-201/人</td><td>390 – 400</td></tr>
+      <tr><td>🛳️ Earnslaw 晚餐船 ✅ $175 起/人</td><td>350</td></tr>
+      <tr><td>🚤 Shotover Jet ✅ $199/人</td><td>400</td></tr>
+      <tr><td>🌌 Mt John 观星团 ✅ $239/人</td><td>480</td></tr>
+      <tr><td>🎆 跨年夜自助餐 ✅ $165/人</td><td>330</td></tr>
+      <tr><td>💜 薰衣草农场 $15/人</td><td>30</td></tr>
+      <tr><td>♨️ 温泉（可选）Onsen ✅ $122 起 + Tekapo Springs $42/人</td><td>0 – 330</td></tr>
+      <tr><td>🍽️ 其他餐饮（估算）</td><td>1,000 – 1,600</td></tr>
+      <tr><td>🧾 杂项（估算）</td><td>150 – 300</td></tr>
+      <tr><th>合计</th><th>约 10,500 – 13,500<br>（约 US$6,100 – 8,100）</th></tr>
+    </table>
+    <div class="note">✅ = 官网价格（2026-10-04 查）；"旅游局页面"是新西兰旅游局等官方目录上的价格；其余为估算。Onsen 写的是"from $122"，是否按人计以订位页为准。不含国际机票、旅行保险、NZeTA + 国际游客税（IVL）。</div>
+
+    <h3>🥾 徒步</h3>
+    <table>
+      <tr><th>步道</th><th>天</th><th>时长</th><th>难度</th></tr>
+      <tr><td>Diamond Lake</td><td>3</td><td>2.5h</td><td>🟡</td></tr>
+      <tr><td>Queenstown Hill</td><td>4</td><td>2.5-3h</td><td>🟡</td></tr>
+      <tr><td>Mt John Summit</td><td>6</td><td>2-2.5h</td><td>🟢</td></tr>
+      <tr><td>Hooker Valley</td><td>6</td><td>3.5-4.5h</td><td>🟢</td></tr>
+      <tr><td>Tasman 冰川徒步</td><td>7</td><td>冰上约 2h</td><td>🟢🟡</td></tr>
+      <tr><td>Roys Peak 观景点（可选登顶）</td><td>8</td><td>6-8.5h</td><td>🔴</td></tr>
+    </table>
+
+    <h3>🐟 三文鱼 & ♨️ 温泉</h3>
+    <ul class="hl">
+      <li><b>Day 2</b> ♨️ Onsen Hot Pools（Arthurs Point，Milford 回来后，可选）</li>
+      <li><b>Day 5</b> ♨️ Tekapo Springs（到 Tekapo 入住后，可选）</li>
+      <li><b>Day 6</b> 🐟 Mt Cook Alpine Salmon — 买刺身去 Pukaki 湖边野餐 ⭐</li>
+      <li><b>Day 7</b> 🐟 High Country Salmon（Twizel，就在去 Wanaka 的路上）</li>
+    </ul>
+
+    <h3>📍 导入 Google My Maps</h3>
+    <ul class="hl">
+      <li>"每日行程"标签里，每天都有 <b>📍 下载当天停靠点 KML</b> 按钮</li>
+      <li>或者一次下载全部：<button type="button" class="kmlbtn" style="margin:0" onclick="downloadKml()">📍 下载全部停靠点 KML</button>（按天分成 9 个文件夹）</li>
+      <li>导入：mymaps.google.com → 新建地图 → 图层下点"导入" → 选文件；每天一个文件就能一天一个图层，可以单独开关</li>
+      <li>导入后，手机上打开 Google Maps App →"你"/"已保存"→"地图"就能看到</li>
+    </ul>
+
+    <h3>💡 注意事项</h3>
+    <ul class="hl">
+      <li>⏰ 每天按 9am 起床、10am 出发安排；Milford 和 Heli Hike 要订 10:30-11am 的班次；Day 8 例外，7:30am 起床爬 Roys Peak</li>
+      <li>🚗 靠左行驶，山路弯多，Twizel 记得加满油</li>
+      <li>☀️ 紫外线极强，SPF50+、墨镜必备；日照约 6am-9:30pm</li>
+      <li>🌦️ 直升机项目受天气影响，可能临时取消，预订时选可改期的</li>
+      <li>🌙 Day 5 Tekapo：日落 9:23pm，天完全变暗 11:47pm，月出 0:55am（亏凸月约 53%）→ 最暗时段约 11:47pm-0:55am</li>
+      <li>🌙 Day 6 Mt Cook：日落 9:24pm，天完全变暗 11:45pm，月出 1:17am（约 43%）→ 跨年倒数正好最暗</li>
+      <li>🎆 跨年在 Mt Cook，旺季住宿极少，务必先订；跨年夜订 Hermitage Alpine 自助餐（$165/人，不可退）</li>
+      <li>🌌 观星只有 Day 5 一晚，没有备用日；Day 6 在 Mt Cook 可以自己看星星</li>
+      <li>📌 大预订（Milford、Earnslaw、Heli Hike、观星团）每天最多一个；温泉放在徒步后面当可选</li>
+      <li>🧭 每日行程里每天都有"在 Google Maps 打开当天路线"按钮和"📍 下载当天停靠点 KML"按钮</li>
+      <li>🚁 Heli Hike 从 Mt Cook Airport 起飞（离村约 10 分钟），全程约 3h；取消时改坐 Glacier Explorers 冰川船</li>
+      <li>🚁 Milford 如果取消，改到 Day 3（鲨鱼艇挪到傍晚）；Glenorchy 挪到 Day 4，替换 Queenstown Hill</li>
+    </ul>
+    <div class="note">价格和时长都是参考值，没有逐项核实，预订前请以官网为准。</div>
+    </div>
+    <div data-l="en" lang="en">
+    <div class="stats">
+      <div class="stat"><b>9 days / 8 nights</b><span>Arrive 12/26 9:50am<br>Depart 1/3 8:30pm</span></div>
+      <div class="stat"><b>~800 km</b><span>Total driving<br>Longest day ~3.5h</span></div>
+      <div class="stat"><b>4 bases</b><span>Only 3 hotel changes</span></div>
+      <div class="stat"><b>2 helicopter trips</b><span>Fiord + glacier</span></div>
+    </div>
+
+    <h3>🗺️ Route</h3>
+    <div class="route">Queenstown <i>4 nights</i> → Lake Tekapo <i>1 night</i> → Mt Cook <i>1 night</i> → Wanaka <i>2 nights</i> → Queenstown ✈️</div>
+
+    <h3>⭐ Highlights</h3>
+    <ul class="hl">
+      <li>🚁 Milford Sound helicopter + cruise (views from the air and the water)</li>
+      <li>❄️ Tasman Glacier heli hike</li>
+      <li>🥾 Roys Peak classic ridge viewpoint (the biggest hike of the trip)</li>
+      <li>🥾 Diamond Lake, Queenstown Hill, Mt John, Hooker Valley and more</li>
+      <li>🌌 Church of the Good Shepherd + Mt John Dark Sky Reserve stargazing</li>
+      <li>🚡 Skyline Gondola + Luge + summit buffet dinner</li>
+      <li>🛳️ TSS Earnslaw steamship + Walter Peak farm dinner, golden-hour cruise back</li>
+      <li>🎆 New Year's Eve at Mt Cook: Hermitage buffet + dark-sky stars</li>
+      <li>🚤 Shotover Jet canyon jet boat</li>
+      <li>🐟 Salmon sashimi picnic by Lake Pukaki · 📷 Peters Lookout</li>
+      <li>♨️ Onsen Hot Pools / Tekapo Springs</li>
+      <li>📷 Roadside viewpoints: Bennetts Bluff, Kawarau Gorge, Lindis Pass, Lake Ruataniwha, Peters Lookout, Crown Range</li>
+      <li>💜 Wanaka lavender · 🪞 Lake Hayes reflections</li>
+    </ul>
+
+    <h3>📅 Day by Day</h3>
+    <table>
+      <tr><th>Day</th><th>Date</th><th>Theme</th><th>Stay</th></tr>
+      <tr><td>1</td><td>12/26</td><td>Arrive; Skyline Gondola + Luge + summit buffet dinner</td><td>Queenstown</td></tr>
+      <tr><td>2</td><td>12/27</td><td>Milford helicopter (optional Onsen)</td><td>Queenstown</td></tr>
+      <tr><td>3</td><td>12/28</td><td>Glenorchy + Diamond Lake + Shotover Jet (Milford backup day)</td><td>Queenstown</td></tr>
+      <tr><td>4</td><td>12/29</td><td>Queenstown Hill + Gardens + 5pm Earnslaw dinner cruise (golden hour on the way back)</td><td>Queenstown</td></tr>
+      <tr><td>5</td><td>12/30</td><td>Kawarau Gorge → Lindis Pass → Lake Ruataniwha → Tekapo → (optional hot pools) → church → Mt John stargazing tour</td><td>Tekapo</td></tr>
+      <tr><td>6</td><td>12/31</td><td>Mt John walk → Pukaki salmon → Peters Lookout → Hooker Valley → Hermitage NYE buffet</td><td>Mt Cook</td></tr>
+      <tr><td>7</td><td>1/1</td><td>Tasman Heli Hike → Twizel salmon → Wanaka</td><td>Wanaka</td></tr>
+      <tr><td>8</td><td>1/2</td><td>Roys Peak viewpoint → That Wanaka Tree sunset</td><td>Wanaka</td></tr>
+      <tr><td>9</td><td>1/3</td><td>Lavender farm → Lake Wanaka brunch → Crown Range → (optional Arrowtown) → Lake Hayes → fly out</td><td>—</td></tr>
+    </table>
+
+    <h3>📋 Booking Checklist</h3>
+    <table>
+      <tr><th>Priority</th><th>Item (official site)</th><th>~NZ$ / person</th><th>Change / refund</th></tr>
+      <tr><td>🔴 Now</td><td><a href="https://www.hermitage.co.nz/stay" target="_blank" rel="noopener noreferrer">Mt Cook Village accommodation (12/31, NYE)</a></td><td>200-400 / night</td><td>Depends on rate; NYE packages are non-refundable. Choose a free-cancellation room rate</td></tr>
+      <tr><td>🔴 Now</td><td><a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Lake Tekapo accommodation ×1 (12/30)</a></td><td>200-350 / night</td><td>Depends on rate; pick a free-cancellation rate</td></tr>
+      <tr><td>🔴 ASAP</td><td><a href="https://www.glaciersouthernlakes.co.nz/" target="_blank" rel="noopener noreferrer">Milford Fly-Cruise-Fly (suggested: Glacier Southern Lakes)</a></td><td>✅ 1,325</td><td>✅ Weather: rebook or cancel free. You cancel: full refund &gt;24h before; 100% fee within 24h. Card charged on flight day</td></tr>
+      <tr><td>🔴 ASAP</td><td><a href="https://www.helicopter.co.nz/aoraki-mount-cook/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Tasman Glacier Heli Hike — The Helicopter Line (with Alpine Guides)</a></td><td>945 (tourism listing)</td><td>✅ Weather: transfer to another date/base, or full refund. No refund for changes within 24h or no-shows</td></tr>
+      <tr><td>(alt.)</td><td><a href="https://www.mtcookskiplanes.com/tasman-heli-hike/" target="_blank" rel="noopener noreferrer">Tasman Heli Hike — Mount Cook Ski Planes &amp; Helicopters</a></td><td>✅ 899</td><td>✅ Free cancellation &gt;48h; 100% within 48h; weather cancellations rebooked or refunded; min. 4 people per trip</td></tr>
+      <tr><td>(alt.)</td><td><a href="https://www.alpineguides.co.nz/trips/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Tasman Heli Hike — Alpine Guides (incl. private)</a></td><td>TBC</td><td>⚠️ Cancellation policy not found online; ask before booking</td></tr>
+      <tr><td>🟡 2 weeks</td><td><a href="https://queenstown.skyline.co.nz/pricing-and-packages" target="_blank" rel="noopener noreferrer">Skyline Gondola + Luge + Stratosfare dinner</a></td><td>✅ 193-201 (gondola + dinner + 3/6 luge)</td><td>✅ Fully refundable / changeable up to 48h before arrival</td></tr>
+      <tr><td>🟡 2 weeks</td><td><a href="https://darkskyproject.co.nz/experiences/the-summit-experience/" target="_blank" rel="noopener noreferrer">Mt John stargazing (Dark Sky Project, Day 5 night)</a></td><td>✅ 239</td><td>✅ Direct bookings: full refund &gt;24h; 100% within 24h. Clouded out: rebook / 3-year voucher / full refund</td></tr>
+      <tr><td>🔴 ASAP</td><td><a href="https://www.hermitage.co.nz/christmas-new-year/new-years-eve-at-the-hermitage" target="_blank" rel="noopener noreferrer">Hermitage Alpine NYE buffet (after 8:30pm)</a></td><td>165</td><td>✅ ❌ Non-refundable and non-transferable (book by email)</td></tr>
+      <tr><td>🟡 2 weeks</td><td><a href="https://www.shotoverjet.com/" target="_blank" rel="noopener noreferrer">Shotover Jet</a></td><td>✅ 199</td><td>✅ Free change/cancel &gt;24h; up to 100% fee within 24h; refund if the operator cancels</td></tr>
+      <tr><td>🟡 2 weeks</td><td><a href="https://www.realnz.com/en/experiences/tss-earnslaw-walter-peak-experiences/walter-peak-gourmet-bbq-dining/" target="_blank" rel="noopener noreferrer">TSS Earnslaw + Walter Peak dinner (RealNZ, Day 4 5pm)</a></td><td>✅ from 175</td><td>✅ Refund/change only with notice ≥24h before departure</td></tr>
+      <tr><td>🟡 ASAP</td><td><a href="https://www.onsen.co.nz/" target="_blank" rel="noopener noreferrer">Onsen Hot Pools (Day 2, optional; often sold out)</a></td><td>✅ from 122 (private pool, up to 4)</td><td>✅ Change/cancel ≥24h ahead or 100% fee; rescheduling subject to availability</td></tr>
+      <tr><td>🟢 No booking</td><td><a href="https://tekaposprings.co.nz/" target="_blank" rel="noopener noreferrer">Tekapo Springs hot pools (Day 5, optional)</a></td><td>42 (tourism listing)</td><td>✅ No booking needed for the hot pools</td></tr>
+      <tr><td>🟢 No booking</td><td><a href="https://www.wanakalavenderfarm.com/plan-your-visit" target="_blank" rel="noopener noreferrer">Wanaka Lavender Farm (Day 9)</a></td><td>15</td><td>✅ Sep-May open daily 9am-5pm, closed Christmas Day; pay on site</td></tr>
+      <tr><td>🟢 ASAP</td><td><a href="https://www.rentalcars.com" target="_blank" rel="noopener noreferrer">Rental SUV (airport pick-up / drop-off)</a></td><td>800-1200 total</td><td>Depends on company; pick free cancellation</td></tr>
+      <tr><td>🟢 Ahead</td><td><a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Queenstown ×4, Wanaka ×2 accommodation</a></td><td>150-250 / night</td><td>Depends on rate; pick free cancellation</td></tr>
+    </table>
+    <div class="note">✅ = checked on the official site (2026-10-04); others are general advice. Re-check terms before booking; third-party sites (Klook, Viator, etc.) may differ.</div>
+
+    <h3>💰 Budget Estimate (2 people, NZ$)</h3>
+    <table>
+      <tr><th>Category</th><th>Total for 2</th></tr>
+      <tr><td>🏨 Accommodation, 8 nights (peak season, estimate)</td><td>1,790 – 3,000</td></tr>
+      <tr><td>🚗 Rental SUV 9 days + fuel (estimate)</td><td>1,150 – 1,750</td></tr>
+      <tr><td>🚁 Milford Fly-Cruise-Fly ✅ $1,325 pp</td><td>2,650</td></tr>
+      <tr><td>❄️ Tasman Heli Hike $899-945 pp</td><td>1,800 – 1,890</td></tr>
+      <tr><td>🚡 Skyline gondola + dinner + Luge ✅ $193-201 pp</td><td>390 – 400</td></tr>
+      <tr><td>🛳️ Earnslaw dinner cruise ✅ from $175 pp</td><td>350</td></tr>
+      <tr><td>🚤 Shotover Jet ✅ $199 pp</td><td>400</td></tr>
+      <tr><td>🌌 Mt John stargazing ✅ $239 pp</td><td>480</td></tr>
+      <tr><td>🎆 NYE buffet ✅ $165 pp</td><td>330</td></tr>
+      <tr><td>💜 Lavender farm $15 pp</td><td>30</td></tr>
+      <tr><td>♨️ Hot pools (optional) Onsen ✅ from $122 + Tekapo Springs $42 pp</td><td>0 – 330</td></tr>
+      <tr><td>🍽️ Other meals (estimate)</td><td>1,000 – 1,600</td></tr>
+      <tr><td>🧾 Misc (estimate)</td><td>150 – 300</td></tr>
+      <tr><th>Total</th><th>~10,500 – 13,500<br>(~US$6,100 – 8,100)</th></tr>
+    </table>
+    <div class="note">✅ = official website price (checked 2026-10-04); "tourism listing" = price on official tourism directories such as New Zealand Tourism; the rest are estimates. Onsen says "from $122" — check the booking page whether it is per person. Excludes international flights, travel insurance, NZeTA + International Visitor Levy (IVL).</div>
+
+    <h3>🥾 Hikes</h3>
+    <table>
+      <tr><th>Track</th><th>Day</th><th>Time</th><th>Difficulty</th></tr>
+      <tr><td>Diamond Lake</td><td>3</td><td>2.5h</td><td>🟡</td></tr>
+      <tr><td>Queenstown Hill</td><td>4</td><td>2.5-3h</td><td>🟡</td></tr>
+      <tr><td>Mt John Summit</td><td>6</td><td>2-2.5h</td><td>🟢</td></tr>
+      <tr><td>Hooker Valley</td><td>6</td><td>3.5-4.5h</td><td>🟢</td></tr>
+      <tr><td>Tasman glacier walk</td><td>7</td><td>~2h on the ice</td><td>🟢🟡</td></tr>
+      <tr><td>Roys Peak viewpoint (summit optional)</td><td>8</td><td>6-8.5h</td><td>🔴</td></tr>
+    </table>
+
+    <h3>🐟 Salmon & ♨️ Hot Pools</h3>
+    <ul class="hl">
+      <li><b>Day 2</b> ♨️ Onsen Hot Pools (Arthurs Point, after Milford, optional)</li>
+      <li><b>Day 5</b> ♨️ Tekapo Springs (after checking in at Tekapo, optional)</li>
+      <li><b>Day 6</b> 🐟 Mt Cook Alpine Salmon — sashimi picnic by Lake Pukaki ⭐</li>
+      <li><b>Day 7</b> 🐟 High Country Salmon (Twizel, on the way to Wanaka)</li>
+    </ul>
+
+    <h3>📍 Import into Google My Maps</h3>
+    <ul class="hl">
+      <li>In the "Daily Plan" tab, every day has a <b>📍 Download day stops (KML)</b> button</li>
+      <li>Or download everything at once: <button type="button" class="kmlbtn" style="margin:0" onclick="downloadKml()">📍 Download all stops (KML)</button> (9 folders, one per day)</li>
+      <li>Import: mymaps.google.com → Create a new map → under a layer click "Import" → choose the file; one file per day gives one layer per day that you can toggle</li>
+      <li>After importing, open the Google Maps app on your phone → "You" / "Saved" → "Maps"</li>
+    </ul>
+
+    <h3>💡 Notes</h3>
+    <ul class="hl">
+      <li>⏰ Planned around 9am wake-up / 10am departure; book Milford and the Heli Hike for 10:30-11am. Exception: Day 8, up at 7:30am for Roys Peak</li>
+      <li>🚗 Drive on the left; winding mountain roads; fill up in Twizel</li>
+      <li>☀️ Very strong UV: SPF50+ and sunglasses; daylight roughly 6am-9:30pm</li>
+      <li>🌦️ Helicopter trips depend on weather and may be cancelled at short notice; book changeable tickets</li>
+      <li>🌙 Day 5 Tekapo: sunset 9:23pm, fully dark 11:47pm, moonrise 0:55am (waning gibbous ~53%) → darkest window ~11:47pm-0:55am</li>
+      <li>🌙 Day 6 Mt Cook: sunset 9:24pm, fully dark 11:45pm, moonrise 1:17am (~43%) → the NYE countdown falls in the darkest window</li>
+      <li>🎆 NYE at Mt Cook: very little accommodation in peak season, book first; book the Hermitage Alpine NYE buffet ($165 pp, non-refundable)</li>
+      <li>🌌 Only one stargazing night (Day 5), no backup; on Day 6 you can stargaze on your own at Mt Cook</li>
+      <li>📌 At most one big booking per day (Milford, Earnslaw, Heli Hike, stargazing tour); hot pools are optional add-ons after hikes</li>
+      <li>🧭 Every day in the Daily Plan has an "Open day route in Google Maps" button and a "📍 Download day stops (KML)" button</li>
+      <li>🚁 The Heli Hike departs Mt Cook Airport (~10 min from the village), about 3h in total; if cancelled, do the Glacier Explorers boat instead</li>
+      <li>🚁 If Milford is cancelled, move it to Day 3 (Shotover Jet moves to the evening); Glenorchy moves to Day 4, replacing Queenstown Hill</li>
+    </ul>
+    <div class="note">Prices and durations are indicative and not individually verified; check the official sites before booking.</div>
+    </div>
+  </div>
+
+  <div id="tab-itinerary" class="panel" style="display:none">
+  <div class="legend">
+    <span>📍 <span data-l="zh">景点/活动</span><span data-l="en">Sights / activities</span></span><span>🥾 <span data-l="zh">徒步</span><span data-l="en">Hike</span></span><span>🐟 <span data-l="zh">三文鱼</span><span data-l="en">Salmon</span></span><span>♨️ <span data-l="zh">温泉</span><span data-l="en">Hot pools</span></span><span>🏨 <span data-l="zh">住宿</span><span data-l="en">Stay</span></span><br>
+    <span>━ <span data-l="zh">自驾</span><span data-l="en">Drive</span></span><span>┅ <span data-l="zh">直升机 / 船</span><span data-l="en">Helicopter / boat</span></span>
+  </div>
+  <div class="btns">
+    <button onclick="showAll(true)"><span data-l="zh">显示全部</span><span data-l="en">Show all</span></button>
+    <button onclick="showAll(false)"><span data-l="zh">全部隐藏</span><span data-l="en">Hide all</span></button>
+  </div>
+  <div id="days"></div>
+  </div>
+  <div class="note">
+    <span data-l="zh">路线线条是按途经点连接的示意线，不是精确道路轨迹；实际导航请点每天的"在 Google Maps 打开当天路线"。<br>
+    标"可选"的是可选项。地图底图来自 OpenStreetMap，需要联网才能显示。</span>
+    <span data-l="en">Route lines are schematic (straight lines between waypoints), not actual roads; for navigation use each day's "Open day route in Google Maps".<br>
+    Items marked "optional" are optional. Base map from OpenStreetMap; needs an internet connection.</span>
+  </div>
+</div>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+// 坐标为近似值
+const P = {
+  zqnAirport: [-45.0211, 168.7392, "皇后镇机场 ✈️"],
+  queenstown: [-45.0312, 168.6626, "皇后镇 🏨"],
+  skyline: [-45.0275, 168.6527, "Skyline 缆车 + Luge + Stratosfare 山顶自助晚餐"],
+  bobsCove: [-45.0670, 168.5150, null],
+  bennetts: [-44.9800, 168.4300, "Bennetts Bluff 观景点"],
+  glenorchy: [-44.8506, 168.3878, "Glenorchy 天堂镇：午餐 + 红色码头小屋 + Lagoon Walkway"],
+  diamondLake: [-44.7930, 168.3620, "🥾 Diamond Lake 徒步"],
+  routeburnRd: [-44.7800, 168.3300, null],
+  routeburn: [-44.7186, 168.2756, null],
+  qtHill: [-45.0213, 168.6751, "🥾 Queenstown Hill Walkway（往返 2.5-3h，Basket of Dreams）"],
+  milford: [-44.6414, 167.8974, "Milford Sound 游船巡游"],
+  walterPeak: [-45.1170, 168.5170, "5pm TSS Earnslaw → Walter Peak 农场晚餐 🐑（返程约 8-8:45pm 黄金时段）"],
+  arthursPoint: [-44.9937, 168.6720, "Shotover Jet 鲨鱼艇 🚤"],
+  onsen: [-44.9880, 168.6790, "♨️ Onsen Hot Pools（可选）"],
+  frankton: [-45.0200, 168.7300, null],
+  gardens: [-45.0355, 168.6600, "Queenstown Gardens 植物园"],
+  mtCookAirport: [-43.7650, 170.1330, "Mt Cook Airport（直升机起飞点）"],
+  kawarau: [-45.0093, 168.8886, "📷 Kawarau Gorge Suspension Bridge（世界第一个商业蹦极点）"],
+  roaringMeg: [-45.0030, 169.0560, "📷 Roaring Meg Lookout（Kawarau Gorge 急流）"],
+  ruataniwha: [-44.2770, 170.0800, "📷 Lake Ruataniwha（对着 Ben Ohau 山脉）"],
+  arrowtown: [-44.9430, 168.8330, "Arrowtown 淘金小镇（可选）"],
+  arrowJct: [-44.9850, 168.8450, null],
+  crownRange: [-44.9300, 168.9600, "Crown Range 山顶观景点（俯瞰 Wakatipu 盆地）"],
+  lakeHayes: [-44.9800, 168.8100, "🪞 Lake Hayes 倒影"],
+  lavender: [-44.7180, 169.2000, "💜 Wanaka Lavender Farm 薰衣草农场（Day 9 上午）"],
+  wanakaLunch: [-44.6970, 169.1330, "Lake Wanaka 湖边早上散步 + 早午餐"],
+  cardrona: [-44.8870, 169.0240, null],
+  cromwell: [-45.0386, 169.1990, null],
+  wanaka: [-44.6990, 169.1360, "Wanaka 🏨"],
+  wanakaTree: [-44.6997, 169.1269, "That Wanaka Tree 📷"],
+  roysPeak: [-44.7140, 169.0750, "🥾 Roys Peak 观景点（Day 8，8:30am 开始，往返约 6-8.5h）"],
+  luggate: [-44.7380, 169.2810, null],
+  tarras: [-44.8380, 169.4130, null],
+  lindis: [-44.5880, 169.6560, "📷 Lindis Pass 山口观景点"],
+  omarama: [-44.4870, 169.9670, null],
+  twizel: [-44.2580, 170.1000, null],
+  highCountry: [-44.2700, 170.1200, "🐟 High Country Salmon"],
+  pukaki: [-44.1886, 170.1392, "🐟 Mt Cook Alpine Salmon + Lake Pukaki 观景台"],
+  peters: [-44.0950, 170.1250, "📷 Peters Lookout（Lake Pukaki 尽头就是 Mt Cook）"],
+  pukakiRd: [-43.9500, 170.1500, null],
+  mtCook: [-43.7359, 170.0966, "Mt Cook Village 🏨（12/31 Hermitage Alpine 跨年自助餐）"],
+  hooker: [-43.7030, 170.0980, "🥾 Hooker Valley 终点冰川湖"],
+  tasman: [-43.6400, 170.2100, "🚁 Tasman Glacier Heli Hike（Mt Cook Airport 起飞，全程约 3h）"],
+  tekapo: [-44.0047, 170.4772, "Lake Tekapo 🏨"],
+  church: [-44.0068, 170.4831, "⛪ 好牧羊人教堂（黄昏拍照）"],
+  mtJohn: [-43.9870, 170.4650, "🌌 Mt John：Day 5 晚观星团 / 🥾 Day 6 上午 Summit Walk + Astro Café"],
+  tekapoSprings: [-44.0000, 170.4660, "♨️ Tekapo Springs（可选）"],
+};
+
+const DAYS = [
+  // stops：按当天时间顺序排列；[地点, 中文说明, English]，同一个地点可以出现多次
+  { d: 1, date: { zh: "12/26 (五)", en: "Fri 12/26" }, color: "#e6194b",
+    title: { zh: "到达 + Skyline 缆车 / Luge / 山顶晚餐", en: "Arrive + Skyline Gondola / Luge / summit dinner" },
+    stay: { zh: "皇后镇", en: "Queenstown" },
+    drive: [["zqnAirport","queenstown"]],
+    stops: [["zqnAirport","✈️ 落地，取租车","✈️ Land, pick up rental car"],
+            ["queenstown","🏨 入住，湖边散步、休息倒时差","🏨 Check in, lakeside stroll, rest off the jet lag"],
+            ["skyline","🚡 Skyline 缆车上山，玩 Luge","🚡 Skyline Gondola up, ride the Luge"],
+            ["skyline","🍽️ Stratosfare 山顶自助晚餐 + 看日落","🍽️ Stratosfare summit buffet dinner + sunset"]] },
+  { d: 2, date: { zh: "12/27 (六)", en: "Sat 12/27" }, color: "#f58231",
+    title: { zh: "Milford 直升机（可选 Onsen）", en: "Milford by helicopter (optional Onsen)" },
+    stay: { zh: "皇后镇", en: "Queenstown" },
+    fly: [["zqnAirport","milford"]], drive: [["queenstown","zqnAirport"],["queenstown","arthursPoint"]],
+    stops: [["zqnAirport","🚁 皇后镇机场起飞：Milford 直升机","🚁 Depart Queenstown Airport: Milford helicopter"],
+            ["milford","🛳️ Milford Sound 游船巡游，直升机返回","🛳️ Milford Sound cruise, fly back"],
+            ["onsen","♨️ 傍晚 Onsen Hot Pools（可选）","♨️ Evening Onsen Hot Pools (optional)"]] },
+  { d: 3, date: { zh: "12/28 (日)", en: "Sun 12/28" }, color: "#ffb000",
+    title: { zh: "Glenorchy 天堂镇 + 鲨鱼艇（Milford 备用日）", en: "Glenorchy + Shotover Jet (Milford backup day)" },
+    stay: { zh: "皇后镇", en: "Queenstown" },
+    drive: [["queenstown","bobsCove","bennetts","glenorchy","diamondLake"],["queenstown","arthursPoint"]],
+    stops: [["bennetts","📷 Bennetts Bluff 观景点","📷 Bennetts Bluff Lookout"],
+            ["diamondLake","🥾 Diamond Lake 徒步","🥾 Diamond Lake hike"],
+            ["glenorchy","🍽️ Glenorchy 午餐 + 红色码头小屋 + Lagoon Walkway","🍽️ Lunch in Glenorchy + red wharf shed + Lagoon Walkway"],
+            ["arthursPoint","🚤 Shotover Jet 鲨鱼艇","🚤 Shotover Jet"]] },
+  { d: 4, date: { zh: "12/29 (一)", en: "Mon 12/29" }, color: "#3cb44b",
+    title: { zh: "Queenstown Hill 徒步 + Earnslaw 蒸汽船", en: "Queenstown Hill hike + Earnslaw steamship" },
+    stay: { zh: "皇后镇", en: "Queenstown" },
+    drive: [["queenstown","qtHill"]], fly: [["queenstown","walterPeak"]],
+    stops: [["qtHill","🥾 Queenstown Hill 徒步（Basket of Dreams）","🥾 Queenstown Hill hike (Basket of Dreams)"],
+            ["gardens","🌳 Queenstown Gardens 植物园 + 冰淇淋","🌳 Queenstown Gardens + ice cream"],
+            ["walterPeak","🛳️ 5pm TSS Earnslaw → Walter Peak 农场晚餐，返程看黄金时段","🛳️ 5pm TSS Earnslaw → Walter Peak farm dinner, golden hour on the way back"],
+            ["queenstown","🌅 湖边看日落；可选 Fergburger 夜宵","🌅 Lakefront sunset; optional late-night Fergburger"]] },
+  { d: 5, date: { zh: "12/30 (二)", en: "Tue 12/30" }, color: "#42d4f4",
+    title: { zh: "皇后镇 → Lindis Pass → Tekapo + 观星团", en: "Queenstown → Lindis Pass → Tekapo + stargazing tour" },
+    stay: { zh: "Lake Tekapo", en: "Lake Tekapo" },
+    drive: [["queenstown","frankton","kawarau","roaringMeg","cromwell","tarras","lindis","omarama","ruataniwha","twizel","pukaki","tekapo"],["tekapo","mtJohn"]],
+    stops: [["kawarau","📷 Kawarau Gorge Suspension Bridge（蹦极桥）","📷 Kawarau Gorge Suspension Bridge (bungy bridge)"],
+            ["roaringMeg","📷 Roaring Meg Lookout","📷 Roaring Meg Lookout"],
+            ["lindis","📷 Lindis Pass 山口","📷 Lindis Pass summit"],
+            ["ruataniwha","📷 Lake Ruataniwha","📷 Lake Ruataniwha"],
+            ["twizel","🍽️ Twizel 午餐 + 加油","🍽️ Lunch + fuel in Twizel"],
+            ["tekapo","🏨 Lake Tekapo 入住","🏨 Check in at Lake Tekapo"],
+            ["tekapoSprings","♨️ Tekapo Springs（可选）","♨️ Tekapo Springs (optional)"],
+            ["church","⛪ 好牧羊人教堂（黄昏）","⛪ Church of the Good Shepherd (dusk)"],
+            ["mtJohn","🌌 Mt John 天文台观星团","🌌 Mt John Observatory stargazing tour"]] },
+  { d: 6, date: { zh: "12/31 (三)", en: "Wed 12/31" }, color: "#4363d8",
+    title: { zh: "Mt John → Pukaki 三文鱼 → Peters → Hooker Valley → 跨年晚餐", en: "Mt John → Pukaki salmon → Peters → Hooker Valley → NYE dinner" },
+    stay: { zh: "Mt Cook Village", en: "Mt Cook Village" },
+    drive: [["tekapo","mtJohn"],["tekapo","pukaki","peters","pukakiRd","mtCook"],["mtCook","hooker"]],
+    stops: [["tekapo","🍳 Tekapo 早餐，退房","🍳 Breakfast in Tekapo, check out"],
+            ["mtJohn","🥾 Mt John Summit Walk + Astro Café","🥾 Mt John Summit Walk + Astro Café"],
+            ["pukaki","🐟 Mt Cook Alpine Salmon：湖边刺身野餐（午餐）+ Pukaki 观景台","🐟 Mt Cook Alpine Salmon: lakeside sashimi picnic (lunch) + Pukaki lookout"],
+            ["peters","📷 Peters Lookout","📷 Peters Lookout"],
+            ["mtCook","🏨 Mt Cook Village 入住","🏨 Check in at Mt Cook Village"],
+            ["hooker","🥾 Hooker Valley 徒步（终点冰川湖）","🥾 Hooker Valley hike (glacier lake at the end)"],
+            ["mtCook","🎆 Hermitage Alpine 跨年自助晚餐 + 星空跨年","🎆 Hermitage Alpine NYE buffet dinner + countdown under the stars"]] },
+  { d: 7, date: { zh: "1/1 (四)", en: "Thu 1/1" }, color: "#911eb4",
+    title: { zh: "Tasman Heli Hike → Twizel 三文鱼 → Wanaka", en: "Tasman Heli Hike → Twizel salmon → Wanaka" },
+    stay: { zh: "Wanaka", en: "Wanaka" },
+    fly: [["mtCookAirport","tasman"]],
+    drive: [["mtCook","mtCookAirport"],["mtCook","pukakiRd","peters","pukaki","highCountry","twizel","omarama","lindis","tarras","luggate","wanaka"]],
+    stops: [["mtCookAirport","🚁 Mt Cook Airport 起飞：Tasman Glacier Heli Hike","🚁 Depart Mt Cook Airport: Tasman Glacier Heli Hike"],
+            ["tasman","❄️ 冰川上向导徒步","❄️ Guided walk on the glacier"],
+            ["mtCook","🍽️ 回村里午餐","🍽️ Lunch back in the village"],
+            ["peters","📷 Peters Lookout（可选再停）","📷 Peters Lookout (optional second stop)"],
+            ["highCountry","🐟 High Country Salmon","🐟 High Country Salmon"],
+            ["lindis","📷 Lindis Pass（可选北向再停）","📷 Lindis Pass (optional, northbound)"],
+            ["wanaka","🏨 Wanaka 入住，湖边散步看日落","🏨 Check in at Wanaka, lakeside sunset stroll"]] },
+  { d: 8, date: { zh: "1/2 (五)", en: "Fri 1/2" }, color: "#f032e6",
+    title: { zh: "Roys Peak → That Wanaka Tree 日落", en: "Roys Peak → That Wanaka Tree sunset" },
+    stay: { zh: "Wanaka", en: "Wanaka" },
+    drive: [["wanaka","roysPeak"]],
+    stops: [["roysPeak","🥾 Roys Peak 观景点（可选登顶）","🥾 Roys Peak viewpoint (summit optional)"],
+            ["wanaka","🏨 回酒店洗澡休息","🏨 Back to the hotel to shower and rest"],
+            ["wanakaTree","📷 That Wanaka Tree 日落 + 晚餐","📷 That Wanaka Tree sunset + dinner"]] },
+  { d: 9, date: { zh: "1/3 (六)", en: "Sat 1/3" }, color: "#808000",
+    title: { zh: "薰衣草 → Crown Range → Lake Hayes → 8:30pm 起飞", en: "Lavender → Crown Range → Lake Hayes → 8:30pm flight" },
+    stay: { zh: "—", en: "—" },
+    drive: [["wanaka","lavender"],["wanaka","cardrona","crownRange","arrowJct","arrowtown","lakeHayes","frankton","zqnAirport"]],
+    stops: [["lavender","💜 Wanaka Lavender Farm 薰衣草农场","💜 Wanaka Lavender Farm"],
+            ["wanakaLunch","🍽️ Lake Wanaka 湖边早午餐，退房","🍽️ Lakeside brunch at Lake Wanaka, check out"],
+            ["crownRange","📷 Crown Range 山顶观景点","📷 Crown Range summit lookout"],
+            ["arrowtown","🏘️ Arrowtown 淘金小镇（可选）","🏘️ Arrowtown gold-rush village (optional)"],
+            ["lakeHayes","🪞 Lake Hayes 倒影","🪞 Lake Hayes reflections"],
+            ["frankton","⛽ Frankton 加油","⛽ Refuel in Frankton"],
+            ["zqnAirport","✈️ 还车，8:30pm 起飞","✈️ Return car, 8:30pm flight"]] },
+];
+
+const I18N = {
+  zh: { title: "新西兰南岛 9天8晚 路线地图", show: "显示", stay: "住", drive: "自驾", fly: "直升机/船",
+        gmap: "🧭 在 Google Maps 打开当天路线", kml: "📍 下载当天停靠点 KML", btn: "EN",
+        kmlAll: "新西兰南岛 9天8晚 全部停靠点", kmlNote: "坐标为近似位置，导入后可在 My Maps 里拖动修正。" },
+  en: { title: "NZ South Island 9-Day Route Map", show: "Show", stay: "Stay", drive: "Drive", fly: "Helicopter / boat",
+        gmap: "🧭 Open day route in Google Maps", kml: "📍 Download day stops (KML)", btn: "中文",
+        kmlAll: "NZ South Island 9 days – all stops", kmlNote: "Coordinates are approximate; drag points in My Maps to fix them after importing." },
+};
+let curLang = "zh";
+const tr = o => o[curLang];
+const stopLabel = s => (curLang === "zh" ? s[1] : s[2]);
+
+
+// Google Maps 导航链接（官方 Maps URLs，无需 API key）。手机浏览器最多支持 3 个途经点。
+const GMAPS = {
+  1: { o: "Queenstown Airport", d: "Skyline Queenstown", w: [] },
+  2: { o: "Queenstown, New Zealand", d: "Onsen Hot Pools, Arthurs Point", w: ["Queenstown Airport"] },
+  3: { o: "Queenstown, New Zealand", d: "Shotover Jet, Arthurs Point", w: ["Bennetts Bluff Lookout", "Diamond Lake Track, Glenorchy", "Glenorchy Wharf Shed"] },
+  4: { o: "Queenstown, New Zealand", d: "Steamer Wharf, Queenstown", w: ["Queenstown Hill Walkway", "Queenstown Gardens"] },
+  5: { o: "Queenstown, New Zealand", d: "Lake Tekapo, New Zealand", w: ["Roaring Meg Lookout", "Lindis Pass Lookout", "Lake Ruataniwha"] },
+  6: { o: "Lake Tekapo, New Zealand", d: "Hooker Valley Track car park, Aoraki Mount Cook", w: ["Mt John Observatory, Lake Tekapo", "Mt Cook Alpine Salmon", "Peters Lookout"] },
+  7: { o: "Mount Cook Airport", d: "Wanaka, New Zealand", w: ["High Country Salmon, Twizel", "Lindis Pass Lookout"] },
+  8: { o: "Wanaka, New Zealand", d: "That Wanaka Tree", w: ["Roys Peak Track car park"] },
+  9: { o: "Wanaka Lavender Farm", d: "Queenstown Airport", w: ["Crown Range Summit Lookout", "Arrowtown", "Lake Hayes"] },
+};
+function gmapsUrl(g) {
+  const q = new URLSearchParams({ api: "1", origin: g.o, destination: g.d, travelmode: "driving" });
+  if (g.w.length) q.set("waypoints", g.w.join("|"));
+  return "https://www.google.com/maps/dir/?" + q.toString();
+}
+
+
+// 在浏览器里生成只含停靠点的 KML（导入 Google My Maps 用），与地图数据保持一致
+function kmlEsc(t) { return String(t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function kmlColor(hex) { return "ff" + hex.slice(5, 7) + hex.slice(3, 5) + hex.slice(1, 3); }
+function dayPlacemarks(day) {
+  let n = 0, out = "";
+  day.stops.forEach(s => {
+    const k = s[0];
+    n++;
+    out += `<Placemark><name>${n}. ${kmlEsc(stopLabel(s))}</name><description>Day ${day.d} · ${kmlEsc(tr(day.date))}</description>` +
+      `<styleUrl>#d${day.d}</styleUrl><Point><coordinates>${P[k][1]},${P[k][0]},0</coordinates></Point></Placemark>\n`;
+  });
+  return out;
+}
+function buildKml(days, title) {
+  let out = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>${kmlEsc(title)}</name>\n` +
+    `<description>${kmlEsc(I18N[curLang].kmlNote)}</description>\n`;
+  days.forEach(d => { out += `<Style id="d${d.d}"><IconStyle><color>${kmlColor(d.color)}</color></IconStyle></Style>\n`; });
+  days.forEach(d => {
+    out += days.length > 1 ? `<Folder><name>Day ${d.d} · ${kmlEsc(tr(d.date))} ${kmlEsc(tr(d.title))}</name>\n${dayPlacemarks(d)}</Folder>\n` : dayPlacemarks(d);
+  });
+  return out + "</Document></kml>\n";
+}
+function downloadKml(dayNum) {
+  const days = dayNum ? DAYS.filter(d => d.d === dayNum) : DAYS;
+  const title = dayNum ? `Day ${days[0].d} · ${tr(days[0].date)} ${tr(days[0].title)}` : I18N[curLang].kmlAll;
+  const blob = new Blob([buildKml(days, title)], { type: "application/vnd.google-earth.kml+xml" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = dayNum ? `nz-day${dayNum}.kml` : "nz-all-stops.kml";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+const map = L.map("map").setView([-44.5, 169.3], 8);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 18, attribution: "&copy; OpenStreetMap contributors"
+}).addTo(map);
+
+const ll = k => [P[k][0], P[k][1]];
+const layers = {};
+const dayMarkers = {};
+
+function render() {
+  const visible = {};
+  DAYS.forEach(day => { visible[day.d] = !layers[day.d] || map.hasLayer(layers[day.d]); });
+  Object.values(layers).forEach(g => map.removeLayer(g));
+  const box = document.getElementById("days");
+  box.innerHTML = "";
+  const t = I18N[curLang];
+  DAYS.forEach(day => {
+    const g = L.layerGroup();
+    (day.drive || []).forEach(seg =>
+      L.polyline(seg.map(ll), { color: day.color, weight: 4, opacity: 0.85 }).bindTooltip(`Day ${day.d} ${t.drive}`).addTo(g));
+    (day.fly || []).forEach(seg =>
+      L.polyline(seg.map(ll), { color: day.color, weight: 3, dashArray: "8 8" }).bindTooltip(`Day ${day.d} ${t.fly}`).addTo(g));
+    dayMarkers[day.d] = day.stops.map((s, i) =>
+      L.circleMarker(ll(s[0]), { radius: 7, color: "#fff", weight: 2, fillColor: day.color, fillOpacity: 1 })
+        .bindPopup(`<b>Day ${day.d} · ${tr(day.date)}</b><br>${i + 1}. ${stopLabel(s)}`).addTo(g));
+    layers[day.d] = g;
+    if (visible[day.d]) g.addTo(map);
+
+    const el = document.createElement("div");
+    el.className = "day";
+    el.style.borderColor = day.color;
+    el.innerHTML = `
+    <h2>Day ${day.d} · ${tr(day.date)}
+      <label><input type="checkbox" ${visible[day.d] ? "checked" : ""} data-d="${day.d}"> ${t.show}</label></h2>
+    <div style="font-size:13px;font-weight:600;margin-bottom:4px">${tr(day.title)}</div>
+    <ol>${day.stops.map((s, i) => `<li data-i="${i}" data-d="${day.d}">${stopLabel(s)}</li>`).join("")}</ol>
+    <div class="stay">🏨 ${t.stay}：${tr(day.stay)}</div>
+    <a class="gmap" href="${gmapsUrl(GMAPS[day.d])}" target="_blank" rel="noopener noreferrer">${t.gmap}</a>
+    <button type="button" class="kmlbtn" onclick="downloadKml(${day.d})">${t.kml}</button>`;
+    box.appendChild(el);
+  });
+  box.querySelectorAll("input[type=checkbox]").forEach(cb =>
+    cb.addEventListener("change", e => toggle(+e.target.dataset.d, e.target.checked)));
+  box.querySelectorAll("li").forEach(li => li.addEventListener("click", () => {
+    const d = +li.dataset.d, i = +li.dataset.i;
+    const target = dayMarkers[d][i];
+    toggle(d, true);
+    map.flyTo(target.getLatLng(), 12, { duration: 0.8 });
+    setTimeout(() => target.openPopup(), 850);
+  }));
+}
+
+function setLang(lang, remember) {
+  curLang = lang === "en" ? "en" : "zh";
+  document.documentElement.dataset.lang = curLang;
+  document.documentElement.lang = curLang === "zh" ? "zh-CN" : "en";
+  document.title = I18N[curLang].title;
+  document.getElementById("langBtn").textContent = I18N[curLang].btn;
+  if (remember) { try { localStorage.setItem("nzLang", curLang); } catch (e) {} }
+  render();
+}
+
+function toggle(d, on) {
+  on ? layers[d].addTo(map) : map.removeLayer(layers[d]);
+  const cb = document.querySelector(`#days input[data-d="${d}"]`);
+  if (cb) cb.checked = on;
+}
+function showAll(on) { DAYS.forEach(day => toggle(day.d, on)); }
+
+// 自动选择语言：先用上次手动选的，否则按浏览器语言（中文 → 中文，其他 → English）
+(function initLang() {
+  let saved = null;
+  try { saved = localStorage.getItem("nzLang"); } catch (e) {}
+  const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "zh"];
+  setLang(saved || (langs.some(l => /^zh/i.test(l)) ? "zh" : "en"), false);
+})();
+
+document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () => {
+  document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === t));
+  document.querySelectorAll(".panel").forEach(p => p.style.display = p.id === "tab-" + t.dataset.tab ? "" : "none");
+}));
+</script>
+</body>
+</html>
