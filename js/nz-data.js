@@ -1,4 +1,4 @@
-// js/nz-data.js - New Zealand Trip Data, Map Renderer & Full Checklist Data
+// js/nz-data.js - New Zealand Trip Data, Map, Checklist & Interactive Controls
 
 const NZ_TRIP_DATA = {
     center: [-44.8, 169.2],
@@ -106,7 +106,7 @@ const NZ_TRIP_DATA = {
     ]
 };
 
-// Full Checklist Data (Must Book + Categories)
+// Full Checklist Data
 const CHECKLIST_DATA = [
     {
         group: "booking",
@@ -203,8 +203,10 @@ const CHECKLIST_DATA = [
 
 let map;
 let markersGroup;
+let routesGroup;
+let showRoutes = true;
 
-// 1. Initialize Map
+// 1. Map Initialization with Custom Colored Pin Markers
 function initNzMap() {
     const mapEl = document.getElementById('map');
     if (!mapEl) return;
@@ -217,28 +219,61 @@ function initNzMap() {
     }).addTo(map);
 
     markersGroup = L.layerGroup().addTo(map);
+    routesGroup = L.layerGroup().addTo(map);
+
     renderNzMapMarkers();
+    renderMapRoutes();
 }
 
-// 2. Render Markers
+// 2. Render Custom Colored Number Pins
 function renderNzMapMarkers() {
     if (!markersGroup) return;
     markersGroup.clearLayers();
 
     NZ_TRIP_DATA.days.forEach(day => {
+        const pinColor = getDayAccentColor(day.day);
+        
         day.stops.forEach(stop => {
             const popupContent = `
                 <b>Day ${day.day}: ${stop.name}</b><br>
                 ${stop.desc[curLang] || stop.desc['zh']}
             `;
-            L.marker([stop.lat, stop.lng])
+            
+            // Create Custom Colored DivIcon Marker
+            const customIcon = L.divIcon({
+                className: 'custom-pin-container',
+                html: `<div class="custom-pin" style="background-color: ${pinColor};">${day.day}</div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+
+            L.marker([stop.lat, stop.lng], { icon: customIcon })
                 .bindPopup(popupContent)
                 .addTo(markersGroup);
         });
     });
 }
 
-// 3. Render Daily Plan Cards
+// 3. Render Map Routes (Polylines)
+function renderMapRoutes() {
+    if (!routesGroup) return;
+    routesGroup.clearLayers();
+
+    if (!showRoutes) return;
+
+    NZ_TRIP_DATA.days.forEach(day => {
+        const coords = day.stops.map(s => [s.lat, s.lng]);
+        if (coords.length > 1) {
+            L.polyline(coords, {
+                color: getDayAccentColor(day.day),
+                weight: 3.5,
+                opacity: 0.85
+            }).addTo(routesGroup);
+        }
+    });
+}
+
+// 4. Render Daily Cards & Bind Individual Card Toggle
 function renderNzItineraryCards() {
     const daysContainer = document.getElementById('days');
     if (!daysContainer) return;
@@ -261,9 +296,10 @@ function renderNzItineraryCards() {
 
         dayCard.innerHTML = `
             <h2>
-                <div class="day-toggle" onclick="this.closest('.day').classList.toggle('open')">
+                <div class="day-toggle">
                     <span>Day ${day.day} (${day.date})</span>
-                    <span style="font-weight:600; margin-left:4px;">${dayTitleText}</span>
+                    <span class="day-sub-title" style="font-weight:600; margin-left:4px;">${dayTitleText}</span>
+                    <span class="day-sub" style="margin-left:6px; color:#888; font-weight:normal;">${dayTitleText}</span>
                 </div>
                 <label>🏨 ${stayText}</label>
             </h2>
@@ -272,16 +308,23 @@ function renderNzItineraryCards() {
             </div>
         `;
 
+        // Click handler to toggle card open/close
+        const toggleBtn = dayCard.querySelector('.day-toggle');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                dayCard.classList.toggle('open');
+            });
+        }
+
         daysContainer.appendChild(dayCard);
     });
 }
 
-// 4. Render Full Checklist
+// 5. Render Full Checklist
 function renderNzChecklist() {
     const checklistContainer = document.getElementById('tab-checklist');
     if (!checklistContainer) return;
 
-    // Render Progress Bar + Group Containers
     let html = `
         <div class="checklist-progress">
             <span>${curLang === 'zh' ? '完成进度' : 'Progress'}</span>: 
@@ -322,22 +365,80 @@ function renderNzChecklist() {
 
     checklistContainer.innerHTML = html;
 
-    // Re-bind Checklist progress and event listeners from main.js
     if (typeof initChecklist === 'function') {
         initChecklist();
     }
+
+    updateOverviewBookingProgress();
 }
 
+// 6. Update Overview "Must Book Progress"
+function updateOverviewBookingProgress() {
+    const bookingGroup = document.querySelector('.checklist-group[data-group="booking"]');
+    const bookCountEls = document.querySelectorAll('.book-count');
+    const fillEls = document.querySelectorAll('.book-card .fill');
+
+    if (!bookingGroup) return;
+
+    const total = bookingGroup.querySelectorAll('.checklist-item').length;
+    const checked = bookingGroup.querySelectorAll('.checklist-item input[type="checkbox"]:checked').length;
+
+    bookCountEls.forEach(el => {
+        el.textContent = `${checked}/${total}`;
+    });
+
+    fillEls.forEach(el => {
+        const pct = total > 0 ? (checked / total) * 100 : 0;
+        el.style.width = `${pct}%`;
+    });
+}
+
+// Helper Function for Accent Colors
 function getDayAccentColor(dayNum) {
-    const colors = ['#1f6feb', '#e5922e', '#2ea043', '#cf222e', '#8250df', '#d4a72c'];
+    const colors = ['#1f6feb', '#e5922e', '#2ea043', '#cf222e', '#8250df', '#d4a72c', '#1f6feb', '#e5922e', '#2ea043'];
     return colors[(dayNum - 1) % colors.length];
 }
 
-// 5. DOM Initialization
+// 7. Bind Interactive Buttons
+function bindButtons() {
+    const btnCards = document.getElementById('btnCards');
+    const btnRoutes = document.getElementById('btnRoutes');
+
+    if (btnCards) {
+        btnCards.addEventListener('click', () => {
+            const dayCards = document.querySelectorAll('.day');
+            const anyClosed = Array.from(dayCards).some(card => !card.classList.contains('open'));
+
+            dayCards.forEach(card => {
+                if (anyClosed) {
+                    card.classList.add('open');
+                } else {
+                    card.classList.remove('open');
+                }
+            });
+        });
+    }
+
+    if (btnRoutes) {
+        btnRoutes.addEventListener('click', () => {
+            showRoutes = !showRoutes;
+            renderMapRoutes();
+        });
+    }
+}
+
+// 8. DOM Handlers
 document.addEventListener('DOMContentLoaded', () => {
     initNzMap();
     renderNzItineraryCards();
     renderNzChecklist();
+    bindButtons();
+
+    document.addEventListener('change', (e) => {
+        if (e.target && e.target.matches('.checklist-item input[type="checkbox"]')) {
+            updateOverviewBookingProgress();
+        }
+    });
 
     const langBtn = document.getElementById('langBtn');
     if (langBtn) {
