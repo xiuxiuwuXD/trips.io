@@ -70,20 +70,22 @@ function initChecklist() {
         }
 
         if (drill) {
-            drill.addEventListener('click', (e) => {
+            // Remove existing listener to prevent duplicate binding
+            drill.onclick = (e) => {
                 e.preventDefault();
+                e.stopPropagation();
                 item.classList.toggle('expanded');
-            });
+            };
         }
     });
 
     // Handle Collapsible Group Headers
     const groupHeaders = document.querySelectorAll('.checklist-group h3');
     groupHeaders.forEach(header => {
-        header.addEventListener('click', () => {
+        header.onclick = () => {
             const group = header.closest('.checklist-group');
             if (group) group.classList.toggle('open');
-        });
+        };
     });
 
     updateProgress();
