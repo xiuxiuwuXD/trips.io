@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>新西兰南岛 9天8晚 路线地图</title>
+<title>Trip</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="assets/css/trip.css">
 </head>
@@ -15,8 +15,17 @@
 <script type="module">
 
   import { mountTrip } from "./js/trip/app.js";
-  import trip from "./data/nz/index.js";
-  mountTrip(trip);
+  const id = new URLSearchParams(location.search).get("trip") || "";
+  if (!/^[a-z0-9_-]+$/i.test(id)) {
+    document.getElementById("sidebar").textContent = "缺少或无效的 ?trip= 参数 / Missing or invalid ?trip= parameter";
+  } else {
+    import(`./data/${id}/index.js`)
+      .then(m => mountTrip(m.default))
+      .catch(err => {
+        console.error(err);
+        document.getElementById("sidebar").textContent = `找不到行程 / Trip not found: ${id}`;
+      });
+  }
 </script>
 </body>
 </html>
