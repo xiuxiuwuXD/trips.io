@@ -1,131 +1,119 @@
-// js/nz-trip.js - New Zealand Trip Data, Map Initialization & Rendering
+// js/main.js - Shared Global Application Logic
 
-// 1. New Zealand Itinerary Data
-const TRIP_DATA = {
-    center: [-44.8, 169.2], // Initial map center coordinate
-    zoom: 8,
-    days: [
-        {
-            day: 1,
-            date: "12/26",
-            title: { zh: "到达皇后镇 + Skyline 缆车", en: "Arrive Queenstown + Skyline Gondola" },
-            stay: { zh: "皇后镇", en: "Queenstown" },
-            stops: [
-                { name: "Queenstown Airport", lat: -45.0212, lng: 168.7391, desc: { zh: "9:50am 到达 & 提车", en: "Arrive 9:50am & pick up car" } },
-                { name: "Skyline Gondola & Luge", lat: -45.0287, lng: 168.6565, desc: { zh: "缆车 + Luge + 山顶晚餐", en: "Gondola + Luge + Buffet Dinner" } }
-            ]
-        },
-        {
-            day: 2,
-            date: "12/27",
-            title: { zh: "Milford Sound 直升机 + 游船", en: "Milford Sound Helicopter + Cruise" },
-            stay: { zh: "皇后镇", en: "Queenstown" },
-            stops: [
-                { name: "Milford Sound Flight Base", lat: -45.0212, lng: 168.7391, desc: { zh: "直升机起飞点", en: "Helicopter Departure" } },
-                { name: "Milford Sound", lat: -44.6716, lng: 167.9256, desc: { zh: "峡湾游船体验", en: "Fiord Cruise" } },
-                { name: "Onsen Hot Pools", lat: -44.9856, lng: 168.6833, desc: { zh: "峡湾温泉 (可选)", en: "Hot Pools (Optional)" } }
-            ]
-        }
-        // Additional days data can be expanded here...
-    ]
-};
+let curLang = 'zh';
 
-// 2. Initialize Leaflet Map
-let map;
-let markersGroup;
-
-function initMap() {
-    const mapEl = document.getElementById('map');
-    if (!mapEl) return;
-
-    // Create Leaflet map instance
-    map = L.map('map').setView(TRIP_DATA.center, TRIP_DATA.zoom);
-
-    // Add OpenStreetMap tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    markersGroup = L.layerGroup().addTo(map);
-
-    // Render initial map markers
-    renderMapMarkers();
+// 1. Language Switcher Function
+function setLang(lang, save = true) {
+    curLang = lang;
+    document.documentElement.setAttribute('data-lang', lang);
+    const langBtn = document.getElementById('langBtn');
+    if (langBtn) {
+        langBtn.textContent = lang === 'zh' ? 'EN' : '中文';
+    }
+    if (save) {
+        localStorage.setItem('trip_app_lang', lang);
+    }
 }
 
-// 3. Render Markers on Map
-function renderMapMarkers() {
-    if (!markersGroup) return;
-    markersGroup.clearLayers();
+// 2. Detect Preferred Browser Language Automatically
+function detectBrowserLanguage() {
+    const userLang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+    return userLang.startsWith('zh') ? 'zh' : 'en';
+}
 
-    TRIP_DATA.days.forEach(day => {
-        day.stops.forEach(stop => {
-            const popupContent = `
-                <b>Day ${day.day}: ${stop.name}</b><br>
-                ${stop.desc[curLang] || stop.desc['zh']}
-            `;
-            L.marker([stop.lat, stop.lng])
-                .bindPopup(popupContent)
-                .addTo(markersGroup);
+// 3. Initialize Tab Switching Behavior
+function initTabs() {
+    const tabs = document.querySelectorAll('.tab');
+    const panels = document.querySelectorAll('.panel');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.getAttribute('data-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            panels.forEach(p => p.style.display = 'none');
+
+            tab.classList.add('active');
+            const targetPanel = document.getElementById(`tab-${target}`);
+            if (targetPanel) {
+                targetPanel.style.display = 'block';
+            }
         });
     });
 }
 
-// 4. Render Daily Itinerary Cards in #days Container
-function renderItineraryCards() {
-    const daysContainer = document.getElementById('days');
-    if (!daysContainer) return;
+// 4. Initialize Checklist Interactions and Progress Tracking
+function initChecklist() {
+    const checklistItems = document.querySelectorAll('.checklist-item');
+    const countEl = document.getElementById('cl-count');
+    const barEl = document.getElementById('cl-bar');
 
-    daysContainer.innerHTML = ''; // Clear container
+    function updateProgress() {
+        if (!checklistItems.length || !countEl) return;
+        const total = checklistItems.length;
+        const checkedCount = document.querySelectorAll('.checklist-item input[type="checkbox"]:checked').length;
+        
+        countEl.textContent = `${checkedCount}/${total}`;
+        if (barEl) {
+            barEl.style.width = `${(checkedCount / total) * 100}%`;
+        }
+    }
 
-    TRIP_DATA.days.forEach(day => {
-        const dayCard = document.createElement('div');
-        dayCard.className = 'day open';
-        dayCard.style.borderColor = getDayColor(day.day);
+    checklistItems.forEach(item => {
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        const drill = item.querySelector('.drill');
 
-        const stopsList = day.stops.map(stop => `
-            <li>
-                <b>${stop.name}</b>: ${stop.desc[curLang] || stop.desc['zh']}
-            </li>
-        `).join('');
+        if (checkbox) {
+            checkbox.addEventListener('change', () => {
+                item.classList.toggle('done', checkbox.checked);
+                updateProgress();
+            });
+        }
 
-        dayCard.innerHTML = `
-            <h2>
-                <div class="day-toggle">
-                    <span>Day ${day.day} (${day.date})</span>
-                    <span class="day-sub">${day.title[curLang] || day.title['zh']}</span>
-                </div>
-                <label>🏨 ${day.stay[curLang] || day.stay['zh']}</label>
-            </h2>
-            <div class="day-body">
-                <ul>${stopsList}</ul>
-            </div>
-        `;
-
-        daysContainer.appendChild(dayCard);
+        if (drill) {
+            drill.addEventListener('click', (e) => {
+                e.preventDefault();
+                item.classList.toggle('expanded');
+            });
+        }
     });
+
+    // Handle Collapsible Group Headers
+    const groupHeaders = document.querySelectorAll('.checklist-group h3');
+    groupHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const group = header.closest('.checklist-group');
+            if (group) group.classList.toggle('open');
+        });
+    });
+
+    updateProgress();
 }
 
-// Helper function to assign accent border colors
-function getDayColor(dayNum) {
-    const colors = ['#1f6feb', '#e5922e', '#2ea043', '#cf222e', '#8250df', '#d4a72c'];
-    return colors[(dayNum - 1) % colors.length];
-}
-
-// 5. Initialize Page Component Listeners
+// 5. Initialize Application Listeners on DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize Map and Render Cards
-    initMap();
-    renderItineraryCards();
+    // Priority: Saved preference > Automatically detected browser language
+    const savedLang = localStorage.getItem('trip_app_lang');
+    const initialLang = savedLang || detectBrowserLanguage();
+    setLang(initialLang, false);
 
-    // Re-render map popups & text when language changes
+    // Bind Language Switch Button Event Listener
     const langBtn = document.getElementById('langBtn');
     if (langBtn) {
         langBtn.addEventListener('click', () => {
-            setTimeout(() => {
-                renderItineraryCards();
-                renderMapMarkers();
-            }, 50);
+            setLang(curLang === 'zh' ? 'en' : 'zh', true);
         });
     }
+
+    // Initialize UI Components
+    initTabs();
+    initChecklist();
+
+    // Bind Checklist Navigation Shortcut Buttons
+    const gotoBtns = document.querySelectorAll('.gocl');
+    gotoBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const checklistTab = document.querySelector('.tab[data-tab="checklist"]');
+            if (checklistTab) checklistTab.click();
+        });
+    });
 });
