@@ -8,15 +8,25 @@
 <style>
   * { box-sizing: border-box; }
   body { margin: 0; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; display: flex; height: 100vh; color: #222; }
-  #sidebar { width: clamp(440px, 50vw, 820px); flex-shrink: 0; overflow-y: auto; padding: 16px; background: #fafafa; border-right: 1px solid #ddd; }
+  #sidebar { width: clamp(440px, 50vw, 820px); flex-shrink: 0; overflow-y: auto; padding: 16px; background: linear-gradient(180deg, #f5f7fa 0%, #eef1f5 100%); border-right: 1px solid #ddd; }
   #map { flex: 1; }
-  h1 { font-size: 18px; margin: 0 0 4px; }
-  .sub { font-size: 13px; color: #666; margin-bottom: 12px; }
+  h1 { font-size: 18px; margin: 0 0 4px; color: #1a1a1a; }
+  .sub { font-size: 13px; color: #666; margin-bottom: 14px; }
   .legend { font-size: 12px; margin-bottom: 12px; line-height: 1.8; }
   .legend span { display: inline-block; margin-right: 10px; }
   .day { border-left: 5px solid; background: #fff; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
   .day h2 { font-size: 14px; margin: 0 0 6px; display: flex; justify-content: space-between; align-items: center; }
-  .day h2 label { font-size: 12px; font-weight: normal; color: #666; cursor: pointer; }
+  .day h2 label { font-size: 12px; font-weight: normal; color: #666; cursor: pointer; white-space: nowrap; }
+  .day h2 { margin: 0; gap: 8px; }
+  .day.open h2 { margin-bottom: 6px; }
+  .day .day-toggle { flex: 1; min-width: 0; display: flex; align-items: baseline; gap: 6px; cursor: pointer; user-select: none; }
+  .day .day-toggle::before { content: "▸"; font-size: 11px; color: #999; transition: transform .15s; }
+  .day.open .day-toggle::before { transform: rotate(90deg); }
+  .day .day-toggle:focus-visible { outline: 2px solid #1f6feb; border-radius: 4px; }
+  .day .day-sub { font-size: 12px; font-weight: 400; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .day.open .day-sub { display: none; }
+  .day .day-body { display: none; }
+  .day.open .day-body { display: block; }
   .day ul, .day ol { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.6; }
   .day li { cursor: pointer; }
   .day li:hover { text-decoration: underline; }
@@ -26,27 +36,109 @@
   .kmlbtn:hover, .kmlbtn:focus { background: #e8f0fe; outline: 2px solid #0b3d91; }
   .gmap:hover, .gmap:focus { background: #155ab6; outline: 2px solid #0b3d91; }
   td a { color: #1a73e8; }
-  .note { font-size: 11px; color: #888; margin-top: 12px; line-height: 1.5; }
-  .btns { margin-bottom: 12px; }
-  .btns button { font-size: 12px; padding: 4px 8px; margin-right: 6px; cursor: pointer; }
-  .tabs { display: flex; gap: 6px; margin-bottom: 12px; }
-  .tab { flex: 1; padding: 8px; border: 1px solid #ccc; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; }
-  .tab.active { background: #1f6feb; color: #fff; border-color: #1f6feb; }
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
-  .stat { background: #fff; border-radius: 6px; padding: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
-  .stat b { display: block; font-size: 16px; color: #1f6feb; }
+  .note { font-size: 11px; color: #888; margin-top: 12px; line-height: 1.5; background: #fff; border-radius: 6px; padding: 8px 10px; border-left: 3px solid #ddd; }
+  .btns { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .tbtn { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; padding: 6px 14px; border: 1px solid #d0d7de; border-radius: 18px; background: #fff; color: #1f6feb; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,.05); transition: background .15s, color .15s, border-color .15s; }
+  .tbtn .ico { font-size: 12px; }
+  .tbtn:hover { background: #e8f0fe; border-color: #1f6feb; }
+  .tbtn:active { background: #1f6feb; color: #fff; }
+  .tbtn:focus-visible { outline: 2px solid #1f6feb; outline-offset: 2px; }
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+  .tab { flex: 1; padding: 9px 8px; border: 1px solid #d0d7de; background: #fff; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .15s; }
+  .tab:hover { background: #f0f3f7; border-color: #b0b8c4; }
+  .tab.active { background: linear-gradient(135deg, #1f6feb, #1558c9); color: #fff; border-color: transparent; box-shadow: 0 2px 6px rgba(31,111,235,.25); }
+  .checklist-group { margin-bottom: 12px; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.05); border-left: 4px solid #1f6feb; overflow: hidden; }
+  .checklist-group[data-group="booking"] { border-left-color: #cf222e; }
+  .checklist-group[data-group="accommodation"] { border-left-color: #e5922e; }
+  .checklist-group[data-group="documents"] { border-left-color: #8250df; }
+  .checklist-group[data-group="clothing"] { border-left-color: #1f6feb; }
+  .checklist-group[data-group="hiking"] { border-left-color: #2ea043; }
+  .checklist-group[data-group="suncare"] { border-left-color: #d4a72c; }
+  .checklist-group[data-group="food"] { border-left-color: #bf3989; }
+  .checklist-group[data-group="medical"] { border-left-color: #0e8a9a; }
+  .checklist-group h3 { font-size: 14px; margin: 0; padding: 11px 14px; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; transition: background .15s; }
+  .checklist-group h3:hover { background: #f8fafd; }
+  .checklist-group h3::before { content: "▸"; font-size: 11px; color: #999; transition: transform .15s; }
+  .checklist-group.open h3::before { transform: rotate(90deg); }
+  .checklist-group .grp-count { margin-left: auto; font-size: 11px; font-weight: 600; color: #666; background: #f0f3f7; border-radius: 10px; padding: 1px 9px; }
+  .checklist-group .grp-count.full { color: #fff; background: #2ea043; }
+  .checklist-details { display: none; padding: 2px 10px 10px; font-size: 12.5px; line-height: 1.6; border-top: 1px solid #f0f0f0; }
+  .checklist-group.open .checklist-details { display: block; }
+  .checklist-item { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; padding: 7px 6px; border-radius: 6px; transition: background .15s; }
+  .checklist-item + .checklist-item { border-top: 1px dashed #eee; }
+  .checklist-item:hover { background: #f8fafd; }
+  .checklist-item input[type=checkbox] { margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px; accent-color: #2ea043; cursor: pointer; }
+  .checklist-item label { cursor: pointer; flex: 1; min-width: 0; }
+  .checklist-item.done { background: #f3fbf5; }
+  .checklist-item.done label { text-decoration: line-through; text-decoration-color: #9bd3a8; color: #8a9a8e; }
+  .checklist-item .detail { display: none; flex-basis: 100%; margin: 4px 0 2px 24px; padding: 8px 12px; background: #f6f8fa; border-left: 3px solid #1f6feb; border-radius: 6px; font-size: 11.5px; line-height: 1.7; color: #444; }
+  .checklist-item.expanded .detail { display: block; }
+  .checklist-item .detail a { color: #1a73e8; text-decoration: none; font-weight: 500; }
+  .checklist-item .detail a:hover { text-decoration: underline; }
+  .checklist-item label .drill { display: inline-block; font-size: 11px; color: #1f6feb; background: #e8f0fe; border-radius: 9px; padding: 0 6px; margin-left: 6px; cursor: pointer; text-decoration: none; transition: all .15s; }
+  .checklist-item label .drill:hover, .checklist-item.expanded label .drill { background: #1f6feb; color: #fff; }
+  .checklist-progress { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #555; margin-bottom: 14px; background: linear-gradient(135deg, #f0f6ff 0%, #fff 100%); border: 1px solid #e0e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.05); }
+  .checklist-progress #cl-count { font-size: 18px; font-weight: 700; color: #2ea043; }
+  .checklist-progress .bar { flex: 1; height: 10px; background: #e5e5e5; border-radius: 5px; overflow: hidden; }
+  .checklist-progress .bar .fill { display: block; height: 100%; background: linear-gradient(90deg, #2ea043, #56d364); border-radius: 5px; transition: width .3s; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat { background: #fff; border-radius: 10px; padding: 12px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); border-left: 4px solid #1f6feb; position: relative; overflow: hidden; }
+  .stat::after { content: ''; position: absolute; top: 0; right: 0; width: 60px; height: 100%; background: linear-gradient(135deg, transparent 40%, rgba(31,111,235,.04)); pointer-events: none; }
+  .stat:nth-child(1) { border-left-color: #1f6feb; }
+  .stat:nth-child(2) { border-left-color: #e5922e; }
+  .stat:nth-child(3) { border-left-color: #2ea043; }
+  .stat:nth-child(4) { border-left-color: #cf222e; }
+  .stat b { display: block; font-size: 18px; color: #1a1a1a; margin-bottom: 2px; }
+  .stat:nth-child(1) b { color: #1f6feb; }
+  .stat:nth-child(2) b { color: #e5922e; }
+  .stat:nth-child(3) b { color: #2ea043; }
+  .stat:nth-child(4) b { color: #cf222e; }
   .stat span { font-size: 11px; color: #666; line-height: 1.4; }
-  h3 { font-size: 14px; margin: 16px 0 6px; }
-  .route { background: #fff; border-radius: 6px; padding: 8px; font-size: 13px; line-height: 1.7; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
-  .route i { font-style: normal; font-size: 11px; color: #fff; background: #888; border-radius: 3px; padding: 0 4px; }
-  .hl { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; }
-  table { width: 100%; border-collapse: collapse; font-size: 12px; background: #fff; }
-  th, td { border: 1px solid #e3e3e3; padding: 4px 6px; text-align: left; vertical-align: top; }
-  th { background: #f0f3f7; }
+  h3 { font-size: 14px; margin: 18px 0 8px; color: #333; letter-spacing: .3px; }
+  .route { background: linear-gradient(135deg, #f0f6ff 0%, #fff 100%); border-radius: 10px; padding: 12px 14px; font-size: 13px; line-height: 2; box-shadow: 0 2px 8px rgba(0,0,0,.05); border: 1px solid #e0e8f0; }
+  .route i { font-style: normal; font-size: 10px; color: #fff; background: #1f6feb; border-radius: 10px; padding: 1px 7px; margin: 0 2px; }
+  .route .arrow { color: #bbb; margin: 0 4px; font-size: 14px; }
+  .hl { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.7; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .hl li { background: #fff; border-radius: 8px; padding: 6px 10px; box-shadow: 0 1px 4px rgba(0,0,0,.05); border-left: 3px solid #e0e0e0; font-size: 12px; }
+  .hl li:nth-child(4n+1) { border-left-color: #1f6feb; }
+  .hl li:nth-child(4n+2) { border-left-color: #e5922e; }
+  .hl li:nth-child(4n+3) { border-left-color: #2ea043; }
+  .hl li:nth-child(4n+4) { border-left-color: #cf222e; }
+  table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  th, td { border-bottom: 1px solid #eee; padding: 7px 8px; text-align: left; vertical-align: top; }
+  th { background: linear-gradient(135deg, #f0f3f7, #e8ecf2); font-weight: 600; color: #444; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafd; }
+  td a { color: #1a73e8; text-decoration: none; }
+  td a:hover { text-decoration: underline; }
+  .book-card { background: #fff; border-radius: 10px; padding: 12px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.06); border-left: 4px solid #cf222e; }
+  .book-card.all-done { border-left-color: #2ea043; }
+  .book-head { display: flex; align-items: center; gap: 10px; }
+  .book-head b { font-size: 18px; color: #2ea043; white-space: nowrap; }
+  .book-head .bar { flex: 1; height: 8px; background: #e5e5e5; border-radius: 4px; overflow: hidden; }
+  .book-head .fill { display: block; height: 100%; width: 0; background: #2ea043; transition: width .3s; }
+  .book-urgent { margin: 10px 0; font-size: 12px; line-height: 1.9; color: #555; }
+  .book-urgent .tag { display: inline-block; background: #ffebe9; color: #cf222e; border-radius: 10px; padding: 0 8px; margin: 2px 4px 2px 0; }
+  .book-urgent .ok { color: #2ea043; font-weight: 600; }
+  .gocl { font-size: 12px; padding: 5px 12px; border: 1px solid #1f6feb; border-radius: 14px; background: #fff; color: #1f6feb; cursor: pointer; }
+  .gocl:hover, .gocl:focus { background: #1f6feb; color: #fff; outline: none; }
+  .cl-nobook { font-size: 11px; color: #666; line-height: 1.6; margin: 8px 6px 0; padding: 6px 10px; background: #f6f8fa; border-radius: 6px; }
+  details.fold { margin: 18px 0 8px; }
+  details.fold > summary { cursor: pointer; list-style: none; user-select: none; display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: #333; background: #fff; border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  details.fold > summary::-webkit-details-marker { display: none; }
+  details.fold > summary::before { content: "▸"; font-size: 12px; color: #888; transition: transform .15s; }
+  details.fold[open] > summary::before { transform: rotate(90deg); }
+  details.fold > summary:hover { background: #f8fafd; }
+  details.fold[open] > summary { margin-bottom: 8px; }
+  .fold-total { margin-left: auto; font-size: 12px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #1f6feb, #1558c9); border-radius: 12px; padding: 2px 10px; }
+  .budget-total td, .budget-total th { background: linear-gradient(135deg, #1f6feb, #1558c9); color: #fff; font-weight: 700; font-size: 13px; }
+  .budget-total a { color: #fff; }
+  .day-row td:first-child { font-weight: 700; color: #1f6feb; font-size: 13px; }
+  .day-row:nth-child(even) td { background: #fafcff; }
   html[data-lang="zh"] [data-l="en"], html[data-lang="en"] [data-l="zh"] { display: none !important; }
   .topbar { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
-  .langbtn { font-size: 12px; padding: 4px 10px; border: 1px solid #1f6feb; border-radius: 14px; background: #fff; color: #1f6feb; cursor: pointer; white-space: nowrap; }
-  .langbtn:hover, .langbtn:focus { background: #e8f0fe; outline: 2px solid #0b3d91; }
+  .langbtn { font-size: 12px; padding: 4px 12px; border: 1px solid #1f6feb; border-radius: 14px; background: #fff; color: #1f6feb; cursor: pointer; white-space: nowrap; font-weight: 500; transition: all .15s; }
+  .langbtn:hover, .langbtn:focus { background: #1f6feb; color: #fff; outline: none; }
   @media (max-width: 800px) { body { flex-direction: column-reverse; } #sidebar { width: 100%; height: 60vh; } #map { height: 40vh; } }
 </style>
 </head>
@@ -62,19 +154,20 @@
   <div class="tabs">
     <button class="tab active" data-tab="summary">📋 <span data-l="zh">总览</span><span data-l="en">Overview</span></button>
     <button class="tab" data-tab="itinerary">🗓️ <span data-l="zh">每日行程</span><span data-l="en">Daily Plan</span></button>
+    <button class="tab" data-tab="checklist">✅ <span data-l="zh">待办清单</span><span data-l="en">Checklist</span></button>
   </div>
 
   <div id="tab-summary" class="panel">
     <div data-l="zh">
     <div class="stats">
-      <div class="stat"><b>9天8晚</b><span>12/26 9:50am 到达<br>1/3 8:30pm 起飞</span></div>
+      <div class="stat"><b>9天8晚</b><span>12/26 9:50am 到达<br>1/3 5:30pm 起飞</span></div>
       <div class="stat"><b>~800 km</b><span>自驾总里程<br>单日最长约 3.5h</span></div>
       <div class="stat"><b>4 个住宿地</b><span>只换 3 次酒店</span></div>
       <div class="stat"><b>2 次直升机</b><span>峡湾 + 冰川</span></div>
     </div>
 
     <h3>🗺️ 路线</h3>
-    <div class="route">皇后镇 <i>4晚</i> → Lake Tekapo <i>1晚</i> → Mt Cook <i>1晚</i> → Wanaka <i>2晚</i> → 皇后镇 ✈️</div>
+    <div class="route">皇后镇 <i>4晚</i> <span class="arrow">→</span> Lake Tekapo <i>1晚</i> <span class="arrow">→</span> Mt Cook <i>1晚</i> <span class="arrow">→</span> Wanaka <i>2晚</i> <span class="arrow">→</span> 皇后镇 ✈️</div>
 
     <h3>⭐ 行程亮点</h3>
     <ul class="hl">
@@ -90,7 +183,7 @@
       <li>🐟 Lake Pukaki 湖边三文鱼刺身野餐 · 📷 Peters Lookout</li>
       <li>♨️ Onsen 峡谷温泉 / Tekapo Springs</li>
       <li>📷 沿途观景点：Bennetts Bluff、Kawarau Gorge、Lindis Pass、Lake Ruataniwha、Peters Lookout、Crown Range</li>
-      <li>💜 Wanaka 薰衣草 · 🪞 Lake Hayes 倒影</li>
+      <li>💜 Wanaka 薰衣草 · 🏔️ Crown Range 观景</li>
     </ul>
 
     <h3>📅 每日一览</h3>
@@ -104,32 +197,18 @@
       <tr><td>6</td><td>12/31</td><td>Mt John 徒步 → Pukaki 三文鱼 → Peters Lookout → Hooker Valley → Hermitage 跨年自助餐</td><td>Mt Cook</td></tr>
       <tr><td>7</td><td>1/1</td><td>Tasman Heli Hike → Twizel 三文鱼 → Wanaka</td><td>Wanaka</td></tr>
       <tr><td>8</td><td>1/2</td><td>Roys Peak 观景点 → That Wanaka Tree 日落</td><td>Wanaka</td></tr>
-      <tr><td>9</td><td>1/3</td><td>薰衣草农场 → Lake Wanaka 早午餐 → Crown Range →（可选 Arrowtown）→ Lake Hayes → 起飞</td><td>—</td></tr>
+      <tr><td>9</td><td>1/3</td><td>薰衣草农场 → Lake Wanaka 早午餐 → Crown Range →（可选 Arrowtown）→ 机场还车 → 5:30pm 起飞</td><td>—</td></tr>
     </table>
 
-    <h3>📋 预订清单</h3>
-    <table>
-      <tr><th>优先级</th><th>项目（官网）</th><th>约 NZ$/人</th><th>改期 / 退款</th></tr>
-      <tr><td>🔴 现在</td><td><a href="https://www.hermitage.co.nz/stay" target="_blank" rel="noopener noreferrer">Mt Cook Village 住宿（12/31，跨年）</a></td><td>200-400/晚</td><td>看所订房型；NYE 套餐不可退。订普通房时选可免费取消的价格</td></tr>
-      <tr><td>🔴 现在</td><td><a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Lake Tekapo 住宿 ×1（12/30）</a></td><td>200-350/晚</td><td>看所订价格，选可免费取消的</td></tr>
-      <tr><td>🔴 尽早</td><td><a href="https://www.glaciersouthernlakes.co.nz/" target="_blank" rel="noopener noreferrer">Milford Fly-Cruise-Fly（推荐 Glacier Southern Lakes）</a></td><td>✅ 1,325</td><td>✅ 天气取消：改期或免费取消。自己取消：起飞 24 小时前全额退，24 小时内 100% 收费。飞行当天才扣款</td></tr>
-      <tr><td>🔴 尽早</td><td><a href="https://www.helicopter.co.nz/aoraki-mount-cook/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Tasman Glacier Heli Hike — The Helicopter Line（与 Alpine Guides 合作）</a></td><td>945（旅游局页面）</td><td>✅ 天气取消：可换到其他日期/基地，改不了就全额退。24 小时内更改或未到不退</td></tr>
-      <tr><td>（备选）</td><td><a href="https://www.mtcookskiplanes.com/tasman-heli-hike/" target="_blank" rel="noopener noreferrer">Tasman Heli Hike — Mount Cook Ski Planes &amp; Helicopters</a></td><td>✅ 899</td><td>✅ 提前 48 小时以上取消免费，48 小时内 100% 收费；天气取消会改期或退未使用部分；每团至少 4 人</td></tr>
-      <tr><td>（备选）</td><td><a href="https://www.alpineguides.co.nz/trips/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Tasman Heli Hike — Alpine Guides（含私人团）</a></td><td>待查</td><td>⚠️ 官网没找到取消政策，预订前问清楚</td></tr>
-      <tr><td>🟡 2周前</td><td><a href="https://queenstown.skyline.co.nz/pricing-and-packages" target="_blank" rel="noopener noreferrer">Skyline 缆车 + Luge + Stratosfare 晚餐</a></td><td>✅ 193-201（缆车+晚餐+3/6 次 Luge）</td><td>✅ 到访 48 小时前取消或改期可全额退</td></tr>
-      <tr><td>🟡 2周前</td><td><a href="https://darkskyproject.co.nz/experiences/the-summit-experience/" target="_blank" rel="noopener noreferrer">Mt John 观星团（Dark Sky Project，Day 5 晚）</a></td><td>✅ 239</td><td>✅ 直接订：出发 24 小时前全额退，24 小时内 100% 收费。天气无法观星：改期 / 3 年有效礼券 / 全额退</td></tr>
-      <tr><td>🔴 尽早</td><td><a href="https://www.hermitage.co.nz/christmas-new-year/new-years-eve-at-the-hermitage" target="_blank" rel="noopener noreferrer">Hermitage Alpine 跨年夜自助餐（8:30pm 后）</a></td><td>165</td><td>✅ ❌ 不可退款、不可转让（邮件订位）</td></tr>
-      <tr><td>🟡 2周前</td><td><a href="https://www.shotoverjet.com/" target="_blank" rel="noopener noreferrer">Shotover Jet</a></td><td>✅ 199</td><td>✅ 24 小时前可免费改期或取消；24 小时内最高 100% 收费；运营方取消整趟才退</td></tr>
-      <tr><td>🟡 2周前</td><td><a href="https://www.realnz.com/en/experiences/tss-earnslaw-walter-peak-experiences/walter-peak-gourmet-bbq-dining/" target="_blank" rel="noopener noreferrer">TSS Earnslaw + Walter Peak 晚餐（RealNZ，Day 4 5pm 班）</a></td><td>✅ 175 起</td><td>✅ 出发 24 小时前通知才可退款或更改</td></tr>
-      <tr><td>🟡 尽早</td><td><a href="https://www.onsen.co.nz/" target="_blank" rel="noopener noreferrer">Onsen Hot Pools（Day 2，可选；常常订满）</a></td><td>✅ 122 起（包场，最多 4 人）</td><td>✅ 至少提前 24 小时改期或取消，否则 100% 收费；改期看空位</td></tr>
-      <tr><td>🟢 不用订</td><td><a href="https://tekaposprings.co.nz/" target="_blank" rel="noopener noreferrer">Tekapo Springs 温泉（Day 5，可选）</a></td><td>42（旅游局页面）</td><td>✅ 温泉不需要预订，直接去</td></tr>
-      <tr><td>🟢 不用订</td><td><a href="https://www.wanakalavenderfarm.com/plan-your-visit" target="_blank" rel="noopener noreferrer">Wanaka Lavender Farm（Day 9）</a></td><td>15</td><td>✅ 9-5 月每天 9am-5pm 开，圣诞节休息；现场买票</td></tr>
-      <tr><td>🟢 尽早</td><td><a href="https://www.rentalcars.com" target="_blank" rel="noopener noreferrer">租车 SUV（机场取还）</a></td><td>800-1200 总</td><td>看租车公司，选可免费取消的</td></tr>
-      <tr><td>🟢 提前</td><td><a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">皇后镇 ×4、Wanaka ×2 住宿</a></td><td>150-250/晚</td><td>看所订价格，选可免费取消的</td></tr>
-    </table>
-    <div class="note">✅ = 已在官网核实（2026-10-04）；其他是一般建议。订之前再看一次官网条款，第三方平台（Klook、Viator 等）的政策可能不同。</div>
+    <h3>📋 预订进度</h3>
+    <div class="book-card">
+      <div class="book-head"><b class="book-count">0/0</b><span class="bar"><span class="fill"></span></span></div>
+      <div class="book-urgent"></div>
+      <button type="button" class="gocl" onclick="gotoChecklist()">去待办清单查看和勾选 →</button>
+    </div>
 
-    <h3>💰 预算估算（2 人，NZ$）</h3>
+    <details class="fold">
+    <summary>💰 预算估算（2 人）<span class="fold-total">约 NZ$10,500 – 13,500</span></summary>
     <table>
       <tr><th>类别</th><th>2 人合计</th></tr>
       <tr><td>🏨 住宿 8 晚（旺季，估算）</td><td>1,790 – 3,000</td></tr>
@@ -148,6 +227,7 @@
       <tr><th>合计</th><th>约 10,500 – 13,500<br>（约 US$6,100 – 8,100）</th></tr>
     </table>
     <div class="note">✅ = 官网价格（2026-10-04 查）；"旅游局页面"是新西兰旅游局等官方目录上的价格；其余为估算。Onsen 写的是"from $122"，是否按人计以订位页为准。不含国际机票、旅行保险、NZeTA + 国际游客税（IVL）。</div>
+    </details>
 
     <h3>🥾 徒步</h3>
     <table>
@@ -195,14 +275,14 @@
     </div>
     <div data-l="en" lang="en">
     <div class="stats">
-      <div class="stat"><b>9 days / 8 nights</b><span>Arrive 12/26 9:50am<br>Depart 1/3 8:30pm</span></div>
+      <div class="stat"><b>9 days / 8 nights</b><span>Arrive 12/26 9:50am<br>Depart 1/3 5:30pm</span></div>
       <div class="stat"><b>~800 km</b><span>Total driving<br>Longest day ~3.5h</span></div>
       <div class="stat"><b>4 bases</b><span>Only 3 hotel changes</span></div>
       <div class="stat"><b>2 helicopter trips</b><span>Fiord + glacier</span></div>
     </div>
 
     <h3>🗺️ Route</h3>
-    <div class="route">Queenstown <i>4 nights</i> → Lake Tekapo <i>1 night</i> → Mt Cook <i>1 night</i> → Wanaka <i>2 nights</i> → Queenstown ✈️</div>
+    <div class="route">Queenstown <i>4 nights</i> <span class="arrow">→</span> Lake Tekapo <i>1 night</i> <span class="arrow">→</span> Mt Cook <i>1 night</i> <span class="arrow">→</span> Wanaka <i>2 nights</i> <span class="arrow">→</span> Queenstown ✈️</div>
 
     <h3>⭐ Highlights</h3>
     <ul class="hl">
@@ -218,7 +298,7 @@
       <li>🐟 Salmon sashimi picnic by Lake Pukaki · 📷 Peters Lookout</li>
       <li>♨️ Onsen Hot Pools / Tekapo Springs</li>
       <li>📷 Roadside viewpoints: Bennetts Bluff, Kawarau Gorge, Lindis Pass, Lake Ruataniwha, Peters Lookout, Crown Range</li>
-      <li>💜 Wanaka lavender · 🪞 Lake Hayes reflections</li>
+      <li>💜 Wanaka lavender · 🏔️ Crown Range views</li>
     </ul>
 
     <h3>📅 Day by Day</h3>
@@ -232,32 +312,18 @@
       <tr><td>6</td><td>12/31</td><td>Mt John walk → Pukaki salmon → Peters Lookout → Hooker Valley → Hermitage NYE buffet</td><td>Mt Cook</td></tr>
       <tr><td>7</td><td>1/1</td><td>Tasman Heli Hike → Twizel salmon → Wanaka</td><td>Wanaka</td></tr>
       <tr><td>8</td><td>1/2</td><td>Roys Peak viewpoint → That Wanaka Tree sunset</td><td>Wanaka</td></tr>
-      <tr><td>9</td><td>1/3</td><td>Lavender farm → Lake Wanaka brunch → Crown Range → (optional Arrowtown) → Lake Hayes → fly out</td><td>—</td></tr>
+      <tr><td>9</td><td>1/3</td><td>Lavender farm → Lake Wanaka brunch → Crown Range → (optional Arrowtown) → return car at airport → 5:30pm flight</td><td>—</td></tr>
     </table>
 
-    <h3>📋 Booking Checklist</h3>
-    <table>
-      <tr><th>Priority</th><th>Item (official site)</th><th>~NZ$ / person</th><th>Change / refund</th></tr>
-      <tr><td>🔴 Now</td><td><a href="https://www.hermitage.co.nz/stay" target="_blank" rel="noopener noreferrer">Mt Cook Village accommodation (12/31, NYE)</a></td><td>200-400 / night</td><td>Depends on rate; NYE packages are non-refundable. Choose a free-cancellation room rate</td></tr>
-      <tr><td>🔴 Now</td><td><a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Lake Tekapo accommodation ×1 (12/30)</a></td><td>200-350 / night</td><td>Depends on rate; pick a free-cancellation rate</td></tr>
-      <tr><td>🔴 ASAP</td><td><a href="https://www.glaciersouthernlakes.co.nz/" target="_blank" rel="noopener noreferrer">Milford Fly-Cruise-Fly (suggested: Glacier Southern Lakes)</a></td><td>✅ 1,325</td><td>✅ Weather: rebook or cancel free. You cancel: full refund &gt;24h before; 100% fee within 24h. Card charged on flight day</td></tr>
-      <tr><td>🔴 ASAP</td><td><a href="https://www.helicopter.co.nz/aoraki-mount-cook/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Tasman Glacier Heli Hike — The Helicopter Line (with Alpine Guides)</a></td><td>945 (tourism listing)</td><td>✅ Weather: transfer to another date/base, or full refund. No refund for changes within 24h or no-shows</td></tr>
-      <tr><td>(alt.)</td><td><a href="https://www.mtcookskiplanes.com/tasman-heli-hike/" target="_blank" rel="noopener noreferrer">Tasman Heli Hike — Mount Cook Ski Planes &amp; Helicopters</a></td><td>✅ 899</td><td>✅ Free cancellation &gt;48h; 100% within 48h; weather cancellations rebooked or refunded; min. 4 people per trip</td></tr>
-      <tr><td>(alt.)</td><td><a href="https://www.alpineguides.co.nz/trips/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Tasman Heli Hike — Alpine Guides (incl. private)</a></td><td>TBC</td><td>⚠️ Cancellation policy not found online; ask before booking</td></tr>
-      <tr><td>🟡 2 weeks</td><td><a href="https://queenstown.skyline.co.nz/pricing-and-packages" target="_blank" rel="noopener noreferrer">Skyline Gondola + Luge + Stratosfare dinner</a></td><td>✅ 193-201 (gondola + dinner + 3/6 luge)</td><td>✅ Fully refundable / changeable up to 48h before arrival</td></tr>
-      <tr><td>🟡 2 weeks</td><td><a href="https://darkskyproject.co.nz/experiences/the-summit-experience/" target="_blank" rel="noopener noreferrer">Mt John stargazing (Dark Sky Project, Day 5 night)</a></td><td>✅ 239</td><td>✅ Direct bookings: full refund &gt;24h; 100% within 24h. Clouded out: rebook / 3-year voucher / full refund</td></tr>
-      <tr><td>🔴 ASAP</td><td><a href="https://www.hermitage.co.nz/christmas-new-year/new-years-eve-at-the-hermitage" target="_blank" rel="noopener noreferrer">Hermitage Alpine NYE buffet (after 8:30pm)</a></td><td>165</td><td>✅ ❌ Non-refundable and non-transferable (book by email)</td></tr>
-      <tr><td>🟡 2 weeks</td><td><a href="https://www.shotoverjet.com/" target="_blank" rel="noopener noreferrer">Shotover Jet</a></td><td>✅ 199</td><td>✅ Free change/cancel &gt;24h; up to 100% fee within 24h; refund if the operator cancels</td></tr>
-      <tr><td>🟡 2 weeks</td><td><a href="https://www.realnz.com/en/experiences/tss-earnslaw-walter-peak-experiences/walter-peak-gourmet-bbq-dining/" target="_blank" rel="noopener noreferrer">TSS Earnslaw + Walter Peak dinner (RealNZ, Day 4 5pm)</a></td><td>✅ from 175</td><td>✅ Refund/change only with notice ≥24h before departure</td></tr>
-      <tr><td>🟡 ASAP</td><td><a href="https://www.onsen.co.nz/" target="_blank" rel="noopener noreferrer">Onsen Hot Pools (Day 2, optional; often sold out)</a></td><td>✅ from 122 (private pool, up to 4)</td><td>✅ Change/cancel ≥24h ahead or 100% fee; rescheduling subject to availability</td></tr>
-      <tr><td>🟢 No booking</td><td><a href="https://tekaposprings.co.nz/" target="_blank" rel="noopener noreferrer">Tekapo Springs hot pools (Day 5, optional)</a></td><td>42 (tourism listing)</td><td>✅ No booking needed for the hot pools</td></tr>
-      <tr><td>🟢 No booking</td><td><a href="https://www.wanakalavenderfarm.com/plan-your-visit" target="_blank" rel="noopener noreferrer">Wanaka Lavender Farm (Day 9)</a></td><td>15</td><td>✅ Sep-May open daily 9am-5pm, closed Christmas Day; pay on site</td></tr>
-      <tr><td>🟢 ASAP</td><td><a href="https://www.rentalcars.com" target="_blank" rel="noopener noreferrer">Rental SUV (airport pick-up / drop-off)</a></td><td>800-1200 total</td><td>Depends on company; pick free cancellation</td></tr>
-      <tr><td>🟢 Ahead</td><td><a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Queenstown ×4, Wanaka ×2 accommodation</a></td><td>150-250 / night</td><td>Depends on rate; pick free cancellation</td></tr>
-    </table>
-    <div class="note">✅ = checked on the official site (2026-10-04); others are general advice. Re-check terms before booking; third-party sites (Klook, Viator, etc.) may differ.</div>
+    <h3>📋 Booking Progress</h3>
+    <div class="book-card">
+      <div class="book-head"><b class="book-count">0/0</b><span class="bar"><span class="fill"></span></span></div>
+      <div class="book-urgent"></div>
+      <button type="button" class="gocl" onclick="gotoChecklist()">Open checklist to view &amp; tick →</button>
+    </div>
 
-    <h3>💰 Budget Estimate (2 people, NZ$)</h3>
+    <details class="fold">
+    <summary>💰 Budget Estimate (2 people)<span class="fold-total">~NZ$10,500 – 13,500</span></summary>
     <table>
       <tr><th>Category</th><th>Total for 2</th></tr>
       <tr><td>🏨 Accommodation, 8 nights (peak season, estimate)</td><td>1,790 – 3,000</td></tr>
@@ -276,6 +342,7 @@
       <tr><th>Total</th><th>~10,500 – 13,500<br>(~US$6,100 – 8,100)</th></tr>
     </table>
     <div class="note">✅ = official website price (checked 2026-10-04); "tourism listing" = price on official tourism directories such as New Zealand Tourism; the rest are estimates. Onsen says "from $122" — check the booking page whether it is per person. Excludes international flights, travel insurance, NZeTA + International Visitor Levy (IVL).</div>
+    </details>
 
     <h3>🥾 Hikes</h3>
     <table>
@@ -329,10 +396,111 @@
     <span>━ <span data-l="zh">自驾</span><span data-l="en">Drive</span></span><span>┅ <span data-l="zh">直升机 / 船</span><span data-l="en">Helicopter / boat</span></span>
   </div>
   <div class="btns">
-    <button onclick="showAll(true)"><span data-l="zh">显示全部</span><span data-l="en">Show all</span></button>
-    <button onclick="showAll(false)"><span data-l="zh">全部隐藏</span><span data-l="en">Hide all</span></button>
+    <button type="button" class="tbtn" id="btnCards" onclick="expandAll(!allOpen())"><span class="ico"></span><span data-l="zh"></span><span data-l="en"></span></button>
+    <button type="button" class="tbtn" id="btnRoutes" onclick="showAll(!allShown())"><span class="ico"></span><span data-l="zh"></span><span data-l="en"></span></button>
   </div>
   <div id="days"></div>
+  </div>
+  <div id="tab-checklist" class="panel" style="display:none">
+    <div class="checklist-progress"><span data-l="zh">完成进度</span><span data-l="en">Progress</span>: <span id="cl-count">0/0</span> <span class="bar"><span class="fill" id="cl-bar" style="width:0%"></span></span></div>
+
+    <div class="checklist-group open" data-group="booking">
+      <h3>🔴 <span data-l="zh">必须预订</span><span data-l="en">Must Book</span></h3>
+      <div class="checklist-details">
+
+        <div class="checklist-item" data-id="cl-milford"><input type="checkbox" id="cl-milford"><label for="cl-milford"><span data-l="zh">Milford Fly-Cruise-Fly（推荐 Glacier Southern Lakes）</span><span data-l="en">Milford Fly-Cruise-Fly (suggested: Glacier Southern Lakes)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">Day 2 · 12/27（周六） · NZ$1,325/人 · <a href="https://www.glaciersouthernlakes.co.nz/" target="_blank">官网</a><br>天气取消可免费改期，自己取消 24h 前全额退，飞行当天才扣款<br>确认有没有 10:30am 以后的班次</span><span data-l="en">Day 2 · Sat 12/27 · NZ$1,325/pp · <a href="https://www.glaciersouthernlakes.co.nz/" target="_blank">Book</a><br>Weather cancel: free reschedule. Self-cancel 24h+ before: full refund. Charged on flight day<br>Confirm 10:30am+ departure availability</span></div></div>
+
+        <div class="checklist-item" data-id="cl-helihike"><input type="checkbox" id="cl-helihike"><label for="cl-helihike"><span data-l="zh">Tasman Glacier Heli Hike（推荐 The Helicopter Line）</span><span data-l="en">Tasman Glacier Heli Hike (suggested: The Helicopter Line)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">Day 7 · 1/1（周四） · NZ$945/人 · <a href="https://www.newzealand.com/int/plan/business/the-helicopter-line-tasman-glacier-heli-hike/" target="_blank" rel="noopener noreferrer">预订页（新西兰旅游局）</a><br>天气取消可改期或全额退。24h 内更改或未到不退<br>确认有没有 10:30-11am 班次<br>🎒 <b>官方提供</b>：冰川靴 + 冰爪（或雪鞋）、需要时借防水外套<br>👕 <b>自己带</b>：3-4 层保暖上衣、打底裤或轻便长裤（<b>不能穿牛仔裤</b>）、墨镜、防晒霜、手机/相机（大相机要挂带）<br>🚫 <b>不能带上飞机</b>：背包、充电宝、无人机、iPad、自拍杆、宽松衣物和围巾<br>📞 起飞前 24h 打 0800 650 651 确认天气；Mount Cook Airport 二楼提前 15 分钟报到；全程约 3h；每班有最少人数<br>备选：<a href="https://www.mtcookskiplanes.com/tasman-heli-hike/" target="_blank" rel="noopener noreferrer">Mount Cook Ski Planes</a> $899（48h 前免费取消，每团至少 4 人）；<a href="https://www.alpineguides.co.nz/trips/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Alpine Guides</a>（含私人团；官网没找到取消政策，订前问清楚）</span><span data-l="en">Day 7 · Thu 1/1 · NZ$945/pp · <a href="https://www.newzealand.com/int/plan/business/the-helicopter-line-tasman-glacier-heli-hike/" target="_blank" rel="noopener noreferrer">Booking page (NZ Tourism)</a><br>Weather cancel: reschedule or full refund. No refund within 24h<br>Confirm 10:30-11am slot availability<br>🎒 <b>Provided</b>: glacier boots + crampons (or snowshoes), waterproof jacket if needed<br>👕 <b>Bring</b>: 3-4 warm upper layers, leggings or light trousers (<b>no jeans</b>), sunglasses, sunscreen, phone/camera (large cameras on a strap)<br>🚫 <b>Not allowed on board</b>: bags, power banks, drones, iPads, selfie sticks, loose clothing/scarves<br>📞 Call 0800 650 651 24h before to check weather; check in upstairs at Mount Cook Airport 15 min early; ~3h total; minimum passenger numbers apply<br>Alternatives: <a href="https://www.mtcookskiplanes.com/tasman-heli-hike/" target="_blank" rel="noopener noreferrer">Mount Cook Ski Planes</a> $899 (free cancel &gt;48h, min. 4 people); <a href="https://www.alpineguides.co.nz/trips/tasman-glacier-heli-hike" target="_blank" rel="noopener noreferrer">Alpine Guides</a> (incl. private; no cancellation policy found online, ask first)</span></div></div>
+
+        <div class="checklist-item" data-id="cl-hermitage"><input type="checkbox" id="cl-hermitage"><label for="cl-hermitage"><span data-l="zh">Hermitage 跨年夜自助餐（8:30pm 后）</span><span data-l="en">Hermitage NYE buffet (after 8:30pm)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">Day 6 · 12/31（周三） · NZ$165/人 · <a href="https://www.hermitage.co.nz/christmas-new-year/new-years-eve-at-the-hermitage" target="_blank">官网</a><br>⚠️ <b>不可退款、不可转让</b>（邮件订位）<br>每桌限时 90 分钟，订 8:30pm 以后的时段</span><span data-l="en">Day 6 · Wed 12/31 · NZ$165/pp · <a href="https://www.hermitage.co.nz/christmas-new-year/new-years-eve-at-the-hermitage" target="_blank">Book</a><br>⚠️ <b>Non-refundable, non-transferable</b> (book by email)<br>90 min per table, request 8:30pm+ seating</span></div></div>
+
+        <div class="checklist-item" data-id="cl-stargazing"><input type="checkbox" id="cl-stargazing"><label for="cl-stargazing"><span data-l="zh">Mt John 观星团（Dark Sky Project）</span><span data-l="en">Mt John stargazing tour (Dark Sky Project)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">Day 5 · 12/30（周二） · NZ$239/人 · <a href="https://darkskyproject.co.nz/experiences/the-summit-experience/" target="_blank">官网</a><br>24h 前可全额退。天气问题可改期/礼券/全额退<br>⚠️ Tekapo 只住一晚，没有备用日</span><span data-l="en">Day 5 · Tue 12/30 · NZ$239/pp · <a href="https://darkskyproject.co.nz/experiences/the-summit-experience/" target="_blank">Book</a><br>Full refund 24h+ before. Weather: reschedule/voucher/refund<br>⚠️ Only 1 night in Tekapo, no backup date</span></div></div>
+
+        <div class="checklist-item" data-id="cl-onsen"><input type="checkbox" id="cl-onsen"><label for="cl-onsen"><span data-l="zh">Onsen Hot Pools（经常订满，尽早订）</span><span data-l="en">Onsen Hot Pools (often sold out, book early)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">Day 2 · 12/27（周六） 可选 · NZ$122 起 · <a href="https://www.onsen.co.nz/" target="_blank">官网</a><br>24h 前可改期或取消，否则 100% 收费</span><span data-l="en">Day 2 · Sat 12/27 optional · NZ$122+ · <a href="https://www.onsen.co.nz/" target="_blank">Book</a><br>Reschedule/cancel 24h+ before, otherwise 100% charge</span></div></div>
+
+        <div class="checklist-item" data-id="cl-skyline"><input type="checkbox" id="cl-skyline"><label for="cl-skyline"><span data-l="zh">Skyline 缆车 + Luge + Stratosfare 晚餐</span><span data-l="en">Skyline Gondola + Luge + Stratosfare dinner</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">Day 1 · 12/26（周五） · NZ$193-201/人 · <a href="https://queenstown.skyline.co.nz/pricing-and-packages" target="_blank">官网</a><br>48h 前可全额退或改期</span><span data-l="en">Day 1 · Fri 12/26 · NZ$193-201/pp · <a href="https://queenstown.skyline.co.nz/pricing-and-packages" target="_blank">Book</a><br>Full refund/reschedule 48h+ before</span></div></div>
+
+        <div class="checklist-item" data-id="cl-shotover"><input type="checkbox" id="cl-shotover"><label for="cl-shotover"><span data-l="zh">Shotover Jet 鲨鱼艇</span><span data-l="en">Shotover Jet boat</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">Day 3 · 12/28（周日） · NZ$199/人 · <a href="https://www.shotoverjet.com/" target="_blank">官网</a><br>24h 前可免费改期或取消</span><span data-l="en">Day 3 · Sun 12/28 · NZ$199/pp · <a href="https://www.shotoverjet.com/" target="_blank">Book</a><br>Free reschedule/cancel 24h+ before</span></div></div>
+
+        <div class="checklist-item" data-id="cl-earnslaw"><input type="checkbox" id="cl-earnslaw"><label for="cl-earnslaw"><span data-l="zh">TSS Earnslaw 晚餐船（5pm 班）</span><span data-l="en">TSS Earnslaw dinner cruise (5pm sailing)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">Day 4 · 12/29（周一） · NZ$175 起/人 · <a href="https://www.realnz.com/en/experiences/tss-earnslaw-walter-peak-experiences/walter-peak-gourmet-bbq-dining/" target="_blank">官网</a><br>24h 前通知可退款或更改</span><span data-l="en">Day 4 · Mon 12/29 · NZ$175+/pp · <a href="https://www.realnz.com/en/experiences/tss-earnslaw-walter-peak-experiences/walter-peak-gourmet-bbq-dining/" target="_blank">Book</a><br>Refund/change with 24h+ notice</span></div></div>
+        <div class="cl-nobook"><span data-l="zh">🟢 不用订：<a href="https://tekaposprings.co.nz/" target="_blank" rel="noopener noreferrer">Tekapo Springs</a>（Day 5 · 12/30，约 $42/人，直接去）· <a href="https://www.wanakalavenderfarm.com/plan-your-visit" target="_blank" rel="noopener noreferrer">Wanaka 薰衣草农场</a>（Day 9 · 1/3，$15/人，9am-5pm 现场买票）</span><span data-l="en">🟢 No booking needed: <a href="https://tekaposprings.co.nz/" target="_blank" rel="noopener noreferrer">Tekapo Springs</a> (Day 5 · 12/30, ~$42 pp, walk in) · <a href="https://www.wanakalavenderfarm.com/plan-your-visit" target="_blank" rel="noopener noreferrer">Wanaka Lavender Farm</a> (Day 9 · 1/3, $15 pp, 9am-5pm, pay on site)</span></div>
+        <div class="cl-nobook"><span data-l="zh">✅ 价格和政策已在官网核实（2026-10-04），订之前再看一次；第三方平台（Klook、Viator 等）的政策可能不同。</span><span data-l="en">✅ Prices and policies checked on official sites (2026-10-04); re-check before booking. Third-party sites (Klook, Viator, etc.) may differ.</span></div>
+      </div>
+    </div>
+
+    <div class="checklist-group" data-group="accommodation">
+      <h3>🏨 <span data-l="zh">住宿和租车</span><span data-l="en">Accommodation &amp; Car</span></h3>
+      <div class="checklist-details">
+        <div class="checklist-item" data-id="cl-car"><input type="checkbox" id="cl-car"><label for="cl-car"><span data-l="zh">租车 SUV（机场取还）</span><span data-l="en">Rent SUV (airport pickup & return)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">🟢 尽早订 · 9 天总价约 NZ$800-1,200 · <a href="https://www.rentalcars.com" target="_blank" rel="noopener noreferrer">Rentalcars</a><br>ZQN 机场取车、机场还车；还车前路上加满油<br>选可免费取消的</span><span data-l="en">🟢 Book early · ~NZ$800-1,200 total for 9 days · <a href="https://www.rentalcars.com" target="_blank" rel="noopener noreferrer">Rentalcars</a><br>Pick up and return at ZQN airport; refuel on the way<br>Pick free cancellation</span></div></div>
+        <div class="checklist-item" data-id="cl-stay-qt"><input type="checkbox" id="cl-stay-qt"><label for="cl-stay-qt"><span data-l="zh">皇后镇 ×4 晚（12/26-29）</span><span data-l="en">Queenstown ×4 nights (12/26-29)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">🟢 提前订 · NZ$150-250/晚 · <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Booking.com</a><br>选可免费取消的价格</span><span data-l="en">🟢 Book ahead · NZ$150-250/night · <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Booking.com</a><br>Pick a free-cancellation rate</span></div></div>
+        <div class="checklist-item" data-id="cl-stay-tk"><input type="checkbox" id="cl-stay-tk"><label for="cl-stay-tk"><span data-l="zh">Lake Tekapo ×1 晚（12/30）</span><span data-l="en">Lake Tekapo ×1 night (12/30)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">🔴 现在订 · NZ$200-350/晚 · <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Booking.com</a><br>选可免费取消的价格</span><span data-l="en">🔴 Book now · NZ$200-350/night · <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Booking.com</a><br>Pick a free-cancellation rate</span></div></div>
+        <div class="checklist-item" data-id="cl-stay-mc"><input type="checkbox" id="cl-stay-mc"><label for="cl-stay-mc"><span data-l="zh">Mt Cook ×1 晚（12/31 跨年🎆）</span><span data-l="en">Mt Cook ×1 night (12/31 NYE🎆)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">🔴 现在订 · NZ$200-400/晚 · <a href="https://www.hermitage.co.nz/stay" target="_blank" rel="noopener noreferrer">Hermitage</a> 或 YHA<br>NYE 套餐不可退；订普通房时选可免费取消的价格</span><span data-l="en">🔴 Book now · NZ$200-400/night · <a href="https://www.hermitage.co.nz/stay" target="_blank" rel="noopener noreferrer">Hermitage</a> or YHA<br>NYE packages are non-refundable; pick a free-cancellation room rate</span></div></div>
+        <div class="checklist-item" data-id="cl-stay-wn"><input type="checkbox" id="cl-stay-wn"><label for="cl-stay-wn"><span data-l="zh">Wanaka ×2 晚（1/1-2）</span><span data-l="en">Wanaka ×2 nights (1/1-2)</span><span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span></label><div class="detail"><span data-l="zh">🟢 提前订 · NZ$150-250/晚 · <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Booking.com</a><br>选可免费取消的价格</span><span data-l="en">🟢 Book ahead · NZ$150-250/night · <a href="https://www.booking.com" target="_blank" rel="noopener noreferrer">Booking.com</a><br>Pick a free-cancellation rate</span></div></div>
+      </div>
+    </div>
+
+
+    <div class="checklist-group" data-group="documents">
+      <h3>📄 <span data-l="zh">证件/电子</span><span data-l="en">Documents / Electronics</span></h3>
+      <div class="checklist-details">
+        <div class="checklist-item" data-id="cl-passport"><input type="checkbox" id="cl-passport"><label for="cl-passport"><span data-l="zh">护照 + NZeTA 确认截图</span><span data-l="en">Passport + NZeTA confirmation screenshot</span></label></div>
+        <div class="checklist-item" data-id="cl-idp"><input type="checkbox" id="cl-idp"><label for="cl-idp"><span data-l="zh">美国驾照实体卡（英文驾照可直接开，不需要国际驾照；确认旅行期间不过期）</span><span data-l="en">Physical US driver's licence (English licences are accepted, no IDP needed; check it won't expire during the trip)</span></label></div>
+        <div class="checklist-item" data-id="cl-bookings"><input type="checkbox" id="cl-bookings"><label for="cl-bookings"><span data-l="zh">所有预订确认邮件离线截图</span><span data-l="en">Offline screenshots of all booking confirmations</span></label></div>
+        <div class="checklist-item" data-id="cl-powerbank"><input type="checkbox" id="cl-powerbank"><label for="cl-powerbank"><span data-l="zh">充电宝 + I 型转换插头（美标不能直接用；Heli Hike 不能带充电宝上直升机，留车上）</span><span data-l="en">Power bank + Type I adapter (US plugs don't fit; power banks not allowed on the Heli Hike helicopter, leave in car)</span></label></div>
+      </div>
+    </div>
+
+    <div class="checklist-group" data-group="clothing">
+      <h3>👕 <span data-l="zh">衣物（洋葱穿法）</span><span data-l="en">Clothing (layer up)</span></h3>
+      <div class="checklist-details">
+        <div class="checklist-item" data-id="cl-jacket"><input type="checkbox" id="cl-jacket"><label for="cl-jacket"><span data-l="zh">🧥 防风防水外套</span><span data-l="en">🧥 Wind/waterproof jacket</span></label></div>
+        <div class="checklist-item" data-id="cl-midlayer"><input type="checkbox" id="cl-midlayer"><label for="cl-midlayer"><span data-l="zh">保暖中间层（抓绒/轻薄羽绒）——观星+冰川用</span><span data-l="en">Warm mid-layer (fleece/packable down) — stargazing + glacier</span></label></div>
+        <div class="checklist-item" data-id="cl-tshirts"><input type="checkbox" id="cl-tshirts"><label for="cl-tshirts"><span data-l="zh">速干 T 恤 ×3-4 + 长裤 ×2 + 短裤 ×1</span><span data-l="en">Quick-dry tees ×3-4 + pants ×2 + shorts ×1</span></label></div>
+        <div class="checklist-item" data-id="cl-hat"><input type="checkbox" id="cl-hat"><label for="cl-hat"><span data-l="zh">🧢 帽子 + 墨镜（偏光镜片）</span><span data-l="en">🧢 Hat + sunglasses (polarized)</span></label></div>
+        <div class="checklist-item" data-id="cl-gloves"><input type="checkbox" id="cl-gloves"><label for="cl-gloves"><span data-l="zh">薄手套——冰川 Heli Hike 冰面用</span><span data-l="en">Light gloves — for glacier ice surface</span></label></div>
+        <div class="checklist-item" data-id="cl-waterproof-pants"><input type="checkbox" id="cl-waterproof-pants"><label for="cl-waterproof-pants"><span data-l="zh">打底裤或轻便长裤——Heli Hike 用（不能穿牛仔裤；防水外套官方可借）</span><span data-l="en">Leggings or light trousers — for Heli Hike (no jeans; waterproof jacket can be borrowed)</span></label></div>
+      </div>
+    </div>
+
+    <div class="checklist-group" data-group="hiking">
+      <h3>🥾 <span data-l="zh">徒步装备</span><span data-l="en">Hiking Gear</span></h3>
+      <div class="checklist-details">
+        <div class="checklist-item" data-id="cl-boots"><input type="checkbox" id="cl-boots"><label for="cl-boots"><span data-l="zh">🥾 防水徒步鞋（Roys Peak + Hooker Valley 必须）</span><span data-l="en">🥾 Waterproof hiking boots (must for Roys Peak + Hooker Valley)</span></label></div>
+        <div class="checklist-item" data-id="cl-socks"><input type="checkbox" id="cl-socks"><label for="cl-socks"><span data-l="zh">厚徒步袜 ×3 双</span><span data-l="en">Thick hiking socks ×3 pairs</span></label></div>
+        <div class="checklist-item" data-id="cl-poles"><input type="checkbox" id="cl-poles"><label for="cl-poles"><span data-l="zh">登山杖（可选，Roys Peak 下坡有用）</span><span data-l="en">Trekking poles (optional, helps Roys Peak descent)</span></label></div>
+        <div class="checklist-item" data-id="cl-daypack"><input type="checkbox" id="cl-daypack"><label for="cl-daypack"><span data-l="zh">小背包 20-30L + 水壶 ×2（每人 2-3L）</span><span data-l="en">Day pack 20-30L + water bottles ×2 (2-3L each)</span></label></div>
+      </div>
+    </div>
+
+    <div class="checklist-group" data-group="suncare">
+      <h3>☀️ <span data-l="zh">防晒</span><span data-l="en">Sun Protection</span></h3>
+      <div class="checklist-details">
+        <div class="checklist-item" data-id="cl-sunscreen"><input type="checkbox" id="cl-sunscreen"><label for="cl-sunscreen"><span data-l="zh">SPF50+ 防晒霜（每 2h 补涂，冰川上必须）</span><span data-l="en">SPF50+ sunscreen (reapply every 2h, essential on glacier)</span></label></div>
+        <div class="checklist-item" data-id="cl-lipbalm"><input type="checkbox" id="cl-lipbalm"><label for="cl-lipbalm"><span data-l="zh">SPF 唇膏</span><span data-l="en">SPF lip balm</span></label></div>
+      </div>
+    </div>
+
+    <div class="checklist-group" data-group="food">
+      <h3>🍱 <span data-l="zh">食物相关</span><span data-l="en">Food Supplies</span></h3>
+      <div class="checklist-details">
+        <div class="checklist-item" data-id="cl-soysauce"><input type="checkbox" id="cl-soysauce"><label for="cl-soysauce"><span data-l="zh">酱油 + 芥末小包——刺身野餐用</span><span data-l="en">Soy sauce + wasabi packets — for sashimi picnic</span></label></div>
+        <div class="checklist-item" data-id="cl-snacks"><input type="checkbox" id="cl-snacks"><label for="cl-snacks"><span data-l="zh">零食/能量棒——Mt Cook 和 Tekapo 买东西不方便</span><span data-l="en">Snacks/energy bars — limited shops at Mt Cook & Tekapo</span></label></div>
+        <div class="checklist-item" data-id="cl-cooler"><input type="checkbox" id="cl-cooler"><label for="cl-cooler"><span data-l="zh">保温袋——三文鱼刺身路上保鲜</span><span data-l="en">Insulated bag — keep salmon sashimi fresh</span></label></div>
+        <div class="checklist-item" data-id="cl-thermos"><input type="checkbox" id="cl-thermos"><label for="cl-thermos"><span data-l="zh">保温杯——观星夜装热水</span><span data-l="en">Thermos — hot water for stargazing night</span></label></div>
+      </div>
+    </div>
+
+    <div class="checklist-group" data-group="medical">
+      <h3>💊 <span data-l="zh">药品/日用</span><span data-l="en">Medical / Daily</span></h3>
+      <div class="checklist-details">
+        <div class="checklist-item" data-id="cl-motion"><input type="checkbox" id="cl-motion"><label for="cl-motion"><span data-l="zh">晕车/晕机药——Crown Range 弯路多</span><span data-l="en">Motion sickness pills — Crown Range is winding</span></label></div>
+        <div class="checklist-item" data-id="cl-meds"><input type="checkbox" id="cl-meds"><label for="cl-meds"><span data-l="zh">个人药品 + 小急救包（创可贴）</span><span data-l="en">Personal meds + first aid kit (band-aids)</span></label></div>
+        <div class="checklist-item" data-id="cl-advil"><input type="checkbox" id="cl-advil"><label for="cl-advil"><span data-l="zh">Advil 止痛药——徒步后肌肉酸痛、头痛</span><span data-l="en">Advil (ibuprofen) — post-hike soreness, headaches</span></label></div>
+        <div class="checklist-item" data-id="cl-allergy"><input type="checkbox" id="cl-allergy"><label for="cl-allergy"><span data-l="zh">过敏药——12 月是新西兰花粉季（草花粉、鲁冰花）</span><span data-l="en">Allergy meds — December is NZ pollen season (grass, lupins)</span></label></div>
+        <div class="checklist-item" data-id="cl-wipes"><input type="checkbox" id="cl-wipes"><label for="cl-wipes"><span data-l="zh">湿纸巾——野餐用</span><span data-l="en">Wet wipes — for picnic</span></label></div>
+      </div>
+    </div>
+
   </div>
   <div class="note">
     <span data-l="zh">路线线条是按途经点连接的示意线，不是精确道路轨迹；实际导航请点每天的"在 Google Maps 打开当天路线"。<br>
@@ -473,16 +641,15 @@ const DAYS = [
             ["wanaka","🏨 回酒店洗澡休息","🏨 Back to the hotel to shower and rest"],
             ["wanakaTree","📷 That Wanaka Tree 日落 + 晚餐","📷 That Wanaka Tree sunset + dinner"]] },
   { d: 9, date: { zh: "1/3 (六)", en: "Sat 1/3" }, color: "#808000",
-    title: { zh: "薰衣草 → Crown Range → Lake Hayes → 8:30pm 起飞", en: "Lavender → Crown Range → Lake Hayes → 8:30pm flight" },
+    title: { zh: "薰衣草 → Crown Range → 机场还车 → 5:30pm 起飞", en: "Lavender → Crown Range → return car → 5:30pm flight" },
     stay: { zh: "—", en: "—" },
-    drive: [["wanaka","lavender"],["wanaka","cardrona","crownRange","arrowJct","arrowtown","lakeHayes","frankton","zqnAirport"]],
+    drive: [["wanaka","lavender"],["wanaka","cardrona","crownRange","arrowJct","arrowtown","zqnAirport"]],
     stops: [["lavender","💜 Wanaka Lavender Farm 薰衣草农场","💜 Wanaka Lavender Farm"],
             ["wanakaLunch","🍽️ Lake Wanaka 湖边早午餐，退房","🍽️ Lakeside brunch at Lake Wanaka, check out"],
             ["crownRange","📷 Crown Range 山顶观景点","📷 Crown Range summit lookout"],
             ["arrowtown","🏘️ Arrowtown 淘金小镇（可选）","🏘️ Arrowtown gold-rush village (optional)"],
-            ["lakeHayes","🪞 Lake Hayes 倒影","🪞 Lake Hayes reflections"],
-            ["frankton","⛽ Frankton 加油","⛽ Refuel in Frankton"],
-            ["zqnAirport","✈️ 还车，8:30pm 起飞","✈️ Return car, 8:30pm flight"]] },
+            ["arrowtown","🏘️ Arrowtown 淘金小镇（可选）","🏘️ Arrowtown (optional)"],
+            ["zqnAirport","✈️ 机场还车，5:30pm 起飞","✈️ Return car at airport, 5:30pm flight"]] },
 ];
 
 const I18N = {
@@ -508,7 +675,7 @@ const GMAPS = {
   6: { o: "Lake Tekapo, New Zealand", d: "Hooker Valley Track car park, Aoraki Mount Cook", w: ["Mt John Observatory, Lake Tekapo", "Mt Cook Alpine Salmon", "Peters Lookout"] },
   7: { o: "Mount Cook Airport", d: "Wanaka, New Zealand", w: ["High Country Salmon, Twizel", "Lindis Pass Lookout"] },
   8: { o: "Wanaka, New Zealand", d: "That Wanaka Tree", w: ["Roys Peak Track car park"] },
-  9: { o: "Wanaka Lavender Farm", d: "Queenstown Airport", w: ["Crown Range Summit Lookout", "Arrowtown", "Lake Hayes"] },
+  9: { o: "Wanaka Lavender Farm", d: "Queenstown Airport", w: ["Crown Range Summit Lookout", "Arrowtown"] },
 };
 function gmapsUrl(g) {
   const q = new URLSearchParams({ api: "1", origin: g.o, destination: g.d, travelmode: "driving" });
@@ -559,6 +726,29 @@ const ll = k => [P[k][0], P[k][1]];
 const layers = {};
 const dayMarkers = {};
 
+// Daily cards expand/collapse state (survives language switch + reload)
+const openDays = new Set((() => { try { return JSON.parse(localStorage.getItem("nzDayOpen") || "[]"); } catch (e) { return []; } })());
+function setDayOpen(d, on) {
+  on ? openDays.add(d) : openDays.delete(d);
+  const el = document.querySelector(`#days .day[data-d="${d}"]`);
+  if (el) { el.classList.toggle("open", on); el.querySelector(".day-toggle").setAttribute("aria-expanded", on); }
+  try { localStorage.setItem("nzDayOpen", JSON.stringify([...openDays])); } catch (e) {}
+  updateToolbar();
+}
+function expandAll(on) { DAYS.forEach(day => setDayOpen(day.d, on)); }
+function allOpen() { return DAYS.every(day => openDays.has(day.d)); }
+function allShown() { return DAYS.every(day => layers[day.d] && map.hasLayer(layers[day.d])); }
+function updateToolbar() {
+  const set = (id, ico, zh, en) => {
+    const b = document.getElementById(id); if (!b) return;
+    b.querySelector(".ico").textContent = ico;
+    b.querySelector('[data-l="zh"]').textContent = zh;
+    b.querySelector('[data-l="en"]').textContent = en;
+  };
+  allOpen() ? set("btnCards", "▸", "全部收起", "Collapse all") : set("btnCards", "▾", "全部展开", "Expand all");
+  allShown() ? set("btnRoutes", "🙈", "隐藏全部路线", "Hide all routes") : set("btnRoutes", "🗺️", "显示全部路线", "Show all routes");
+}
+
 function render() {
   const visible = {};
   DAYS.forEach(day => { visible[day.d] = !layers[day.d] || map.hasLayer(layers[day.d]); });
@@ -579,17 +769,26 @@ function render() {
     if (visible[day.d]) g.addTo(map);
 
     const el = document.createElement("div");
-    el.className = "day";
+    const isOpen = openDays.has(day.d);
+    el.className = "day" + (isOpen ? " open" : "");
+    el.dataset.d = day.d;
     el.style.borderColor = day.color;
     el.innerHTML = `
-    <h2>Day ${day.d} · ${tr(day.date)}
+    <h2><span class="day-toggle" role="button" tabindex="0" aria-expanded="${isOpen}" data-d="${day.d}">Day ${day.d} · ${tr(day.date)} <span class="day-sub">${tr(day.title)}</span></span>
       <label><input type="checkbox" ${visible[day.d] ? "checked" : ""} data-d="${day.d}"> ${t.show}</label></h2>
+    <div class="day-body">
     <div style="font-size:13px;font-weight:600;margin-bottom:4px">${tr(day.title)}</div>
     <ol>${day.stops.map((s, i) => `<li data-i="${i}" data-d="${day.d}">${stopLabel(s)}</li>`).join("")}</ol>
     <div class="stay">🏨 ${t.stay}：${tr(day.stay)}</div>
     <a class="gmap" href="${gmapsUrl(GMAPS[day.d])}" target="_blank" rel="noopener noreferrer">${t.gmap}</a>
-    <button type="button" class="kmlbtn" onclick="downloadKml(${day.d})">${t.kml}</button>`;
+    <button type="button" class="kmlbtn" onclick="downloadKml(${day.d})">${t.kml}</button>
+    </div>`;
     box.appendChild(el);
+  });
+  box.querySelectorAll(".day-toggle").forEach(h => {
+    const flip = () => setDayOpen(+h.dataset.d, !openDays.has(+h.dataset.d));
+    h.addEventListener("click", flip);
+    h.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } });
   });
   box.querySelectorAll("input[type=checkbox]").forEach(cb =>
     cb.addEventListener("change", e => toggle(+e.target.dataset.d, e.target.checked)));
@@ -600,6 +799,7 @@ function render() {
     map.flyTo(target.getLatLng(), 12, { duration: 0.8 });
     setTimeout(() => target.openPopup(), 850);
   }));
+  updateToolbar();
 }
 
 function setLang(lang, remember) {
@@ -616,6 +816,7 @@ function toggle(d, on) {
   on ? layers[d].addTo(map) : map.removeLayer(layers[d]);
   const cb = document.querySelector(`#days input[data-d="${d}"]`);
   if (cb) cb.checked = on;
+  updateToolbar();
 }
 function showAll(on) { DAYS.forEach(day => toggle(day.d, on)); }
 
@@ -631,6 +832,91 @@ document.querySelectorAll(".tab").forEach(t => t.addEventListener("click", () =>
   document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x === t));
   document.querySelectorAll(".panel").forEach(p => p.style.display = p.id === "tab-" + t.dataset.tab ? "" : "none");
 }));
+
+// ── Checklist: localStorage persistence + progress ──
+(function() {
+  const KEY = "nz-trip-checklist";
+  const saved = JSON.parse(localStorage.getItem(KEY) || "{}");
+  const items = document.querySelectorAll("#tab-checklist .checklist-item");
+  const countEl = document.getElementById("cl-count");
+  const barEl = document.getElementById("cl-bar");
+
+  function updateProgress() {
+    let done = 0;
+    items.forEach(it => { if (it.querySelector("input").checked) done++; });
+    countEl.textContent = done + "/" + items.length;
+    barEl.style.width = (items.length ? (done / items.length * 100) : 0) + "%";
+    document.querySelectorAll("#tab-checklist .checklist-group").forEach(g => {
+      const its = g.querySelectorAll(".checklist-item");
+      const d = g.querySelectorAll(".checklist-item input:checked").length;
+      let badge = g.querySelector(".grp-count");
+      if (!badge) { badge = document.createElement("span"); badge.className = "grp-count"; g.querySelector("h3").appendChild(badge); }
+      badge.textContent = d + "/" + its.length;
+      badge.classList.toggle("full", its.length > 0 && d === its.length);
+    });
+    updateBookingCard();
+  }
+
+  // Summary booking card reads checklist state (single source of truth)
+  const URGENT = [
+    ["cl-stay-mc", "Mt Cook 住宿（跨年）", "Mt Cook stay (NYE)"],
+    ["cl-stay-tk", "Tekapo 住宿", "Tekapo stay"],
+    ["cl-milford", "Milford 直升机", "Milford heli"],
+    ["cl-helihike", "Tasman Heli Hike", "Tasman Heli Hike"],
+    ["cl-hermitage", "Hermitage 跨年自助餐（不可退）", "Hermitage NYE buffet (non-refundable)"]
+  ];
+  function updateBookingCard() {
+    const books = document.querySelectorAll('#tab-checklist [data-group="booking"] .checklist-item, #tab-checklist [data-group="accommodation"] .checklist-item');
+    let booked = 0;
+    books.forEach(b => { if (b.querySelector("input").checked) booked++; });
+    const pending = URGENT.filter(u => !document.getElementById(u[0]).checked);
+    document.querySelectorAll(".book-card").forEach(card => {
+      const zh = card.closest('[data-l]').dataset.l === "zh";
+      card.querySelector(".book-count").textContent = booked + "/" + books.length + (zh ? " 已订" : " booked");
+      card.querySelector(".fill").style.width = (books.length ? booked / books.length * 100 : 0) + "%";
+      card.classList.toggle("all-done", pending.length === 0);
+      card.querySelector(".book-urgent").innerHTML = pending.length
+        ? (zh ? "🔴 还没订的紧急项：" : "🔴 Urgent, not booked yet: ") + pending.map(u => '<span class="tag">' + (zh ? u[1] : u[2]) + "</span>").join("")
+        : '<span class="ok">' + (zh ? "✅ 紧急项都订好了" : "✅ All urgent items booked") + "</span>";
+    });
+  }
+
+  items.forEach(it => {
+    const cb = it.querySelector("input");
+    const id = it.dataset.id;
+    if (saved[id]) { cb.checked = true; it.classList.add("done"); }
+    cb.addEventListener("change", () => {
+      it.classList.toggle("done", cb.checked);
+      saved[id] = cb.checked;
+      localStorage.setItem(KEY, JSON.stringify(saved));
+      updateProgress();
+    });
+  });
+
+  document.querySelectorAll(".checklist-group h3").forEach(h => {
+    h.addEventListener("click", () => h.parentElement.classList.toggle("open"));
+  });
+
+  updateProgress();
+})();
+
+// ── Jump from summary card to checklist tab ──
+function gotoChecklist() {
+  document.querySelector('.tab[data-tab="checklist"]').click();
+  document.getElementById("sidebar").scrollTop = 0;
+}
+
+// ── Auto-style budget total row ──
+document.querySelectorAll("#tab-summary table tr").forEach(tr => {
+  const th = tr.querySelector("th");
+  if (th && (th.textContent.includes("合计") || th.textContent.includes("Total"))) tr.classList.add("budget-total");
+});
+
+// ── Auto-style day-by-day table rows ──
+document.querySelectorAll("#tab-summary table tr").forEach(tr => {
+  const td = tr.querySelector("td");
+  if (td && /^\d$/.test(td.textContent.trim())) tr.classList.add("day-row");
+});
 </script>
 </body>
 </html>
