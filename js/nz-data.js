@@ -1,4 +1,4 @@
-// js/nz-data.js - New Zealand Trip Data, Map, Checklist & Interactive Controls
+// js/nz-data.js - New Zealand Trip Data, Map, Full Checklist with Links & Controls
 
 const NZ_TRIP_DATA = {
     center: [-44.8, 169.2],
@@ -106,7 +106,7 @@ const NZ_TRIP_DATA = {
     ]
 };
 
-// Full Checklist Data
+// Full Checklist Data containing official links for all 7 major bookings
 const CHECKLIST_DATA = [
     {
         group: "booking",
@@ -116,56 +116,56 @@ const CHECKLIST_DATA = [
                 id: "cl-milford",
                 label: { zh: "Milford Fly-Cruise-Fly（推荐 Glacier Southern Lakes）", en: "Milford Fly-Cruise-Fly (suggested: Glacier Southern Lakes)" },
                 detail: {
-                    zh: "Day 2 · 12/27（周六） · NZ$1,325/人 · <a href='https://www.glaciersouthernlakes.co.nz/' target='_blank'>官网</a><br>天气取消可免费改期，自己取消 24h 前全额退，飞行当天才扣款<br>确认有没有 10:30am 以后的班次",
-                    en: "Day 2 · Sat 12/27 · NZ$1,325/pp · <a href='https://www.glaciersouthernlakes.co.nz/' target='_blank'>Book</a><br>Weather cancel: free reschedule. Self-cancel 24h+ before: full refund. Charged on flight day<br>Confirm 10:30am+ departure availability"
+                    zh: "Day 2 · 12/27（周六） · NZ$1,325/人 · <a href='https://www.glaciersouthernlakes.co.nz/' target='_blank'>官网预订</a><br>天气取消可免费改期，自己取消 24h 前全额退，飞行当天才扣款。<br>确认有没有 10:30am 以后的班次。",
+                    en: "Day 2 · Sat 12/27 · NZ$1,325/pp · <a href='https://www.glaciersouthernlakes.co.nz/' target='_blank'>Official Booking</a><br>Weather cancel: free reschedule. Self-cancel 24h+ before: full refund. Charged on flight day.<br>Confirm 10:30am+ departure availability."
                 }
             },
             {
                 id: "cl-helihike",
                 label: { zh: "Tasman Glacier Heli Hike（推荐 The Helicopter Line）", en: "Tasman Glacier Heli Hike (suggested: The Helicopter Line)" },
                 detail: {
-                    zh: "Day 7 · 1/1（周四） · NZ$945/人 · <a href='https://www.helicopter.co.nz/' target='_blank'>官网</a><br>冰川徒步体验约 2 小时，含防滑冰爪与专业导游",
-                    en: "Day 7 · Thu 1/1 · NZ$945/pp · <a href='https://www.helicopter.co.nz/' target='_blank'>Book</a><br>~2h on-ice guided hike including crampons and gear"
+                    zh: "Day 7 · 1/1（周四） · NZ$945/人 · <a href='https://www.helicopter.co.nz/' target='_blank'>官网预订</a><br>冰川徒步体验约 2 小时，含防滑冰爪与专业导游。",
+                    en: "Day 7 · Thu 1/1 · NZ$945/pp · <a href='https://www.helicopter.co.nz/' target='_blank'>Official Booking</a><br>~2h on-ice guided hike including crampons and gear."
                 }
             },
             {
                 id: "cl-skyline",
                 label: { zh: "Skyline Gondola + Luge + 山顶自助晚餐", en: "Skyline Gondola + Luge + Summit Buffet Dinner" },
                 detail: {
-                    zh: "Day 1 · 12/26（周五） · NZ$193-201/人 · 建议预订 5:30pm 或 6:00pm 晚餐",
-                    en: "Day 1 · Fri 12/26 · NZ$193-201/pp · Recommend 5:30pm or 6:00pm dinner slot"
+                    zh: "Day 1 · 12/26（周五） · NZ$193-201/人 · <a href='https://www.skyline.co.nz/queenstown/' target='_blank'>官网预订</a><br>建议预订 5:30pm 或 6:00pm 晚餐班次。",
+                    en: "Day 1 · Fri 12/26 · NZ$193-201/pp · <a href='https://www.skyline.co.nz/queenstown/' target='_blank'>Official Booking</a><br>Recommend 5:30pm or 6:00pm dinner slot."
                 }
             },
             {
                 id: "cl-earnslaw",
                 label: { zh: "TSS Earnslaw 蒸汽船 + Walter Peak 农场晚餐", en: "TSS Earnslaw Cruise + Walter Peak Farm Dinner" },
                 detail: {
-                    zh: "Day 4 · 12/29（周一） · NZ$175 起/人 · 建议订 5:00pm 班次，返程欣赏黄金时段",
-                    en: "Day 4 · Mon 12/29 · From NZ$175/pp · Recommend 5:00pm departure for golden hour views"
+                    zh: "Day 4 · 12/29（周一） · NZ$175 起/人 · <a href='https://www.realnz.com/en/experiences/cruises/tss-earnslaw-steamship-cruises/' target='_blank'>官网预订</a><br>建议订 5:00pm 班次，返程欣赏黄金时段。",
+                    en: "Day 4 · Mon 12/29 · From NZ$175/pp · <a href='https://www.realnz.com/en/experiences/cruises/tss-earnslaw-steamship-cruises/' target='_blank'>Official Booking</a><br>Recommend 5:00pm departure for golden hour views."
                 }
             },
             {
                 id: "cl-hermitage",
                 label: { zh: "Mt Cook Hermitage Alpine 跨年夜自助餐", en: "Mt Cook Hermitage Alpine NYE Buffet Dinner" },
                 detail: {
-                    zh: "Day 6 · 12/31（周三） · NZ$165/人 · 旺季务必提前抢订",
-                    en: "Day 6 · Wed 12/31 · NZ$165/pp · Book early due to high demand"
+                    zh: "Day 6 · 12/31（周三） · NZ$165/人 · <a href='https://www.hermitage.co.nz/' target='_blank'>官网预订</a><br>旺季务必提前抢订。",
+                    en: "Day 6 · Wed 12/31 · NZ$165/pp · <a href='https://www.hermitage.co.nz/' target='_blank'>Official Booking</a><br>Book early due to high demand."
                 }
             },
             {
                 id: "cl-stargazing",
                 label: { zh: "Mt John 暗夜保护区观星团 (Dark Sky Project)", en: "Mt John Observatory Stargazing (Dark Sky Project)" },
                 detail: {
-                    zh: "Day 5 · 12/30（周二） · NZ$239/人 · 包含天文望远镜讲解与热饮",
-                    en: "Day 5 · Tue 12/30 · NZ$239/pp · Includes telescope tour & hot drinks"
+                    zh: "Day 5 · 12/30（周二） · NZ$239/人 · <a href='https://www.darkskyproject.co.nz/' target='_blank'>官网预订</a><br>包含专业天文望远镜讲解与热饮。",
+                    en: "Day 5 · Tue 12/30 · NZ$239/pp · <a href='https://www.darkskyproject.co.nz/' target='_blank'>Official Booking</a><br>Includes telescope tour & hot drinks."
                 }
             },
             {
                 id: "cl-shotover",
                 label: { zh: "Shotover Jet 峡谷喷气快艇", en: "Shotover Jet Canyon Boat" },
                 detail: {
-                    zh: "Day 3 · 12/28（周日） · NZ$199/人 · 穿梭于 Shotover 狭窄峡谷",
-                    en: "Day 3 · Sun 12/28 · NZ$199/pp · Thrilling ride through Shotover Canyon"
+                    zh: "Day 3 · 12/28（周日） · NZ$199/人 · <a href='https://www.shotoverjet.com/' target='_blank'>官网预订</a><br>穿梭于 Shotover 狭窄峡谷体验极致刺激。",
+                    en: "Day 3 · Sun 12/28 · NZ$199/pp · <a href='https://www.shotoverjet.com/' target='_blank'>Official Booking</a><br>Thrilling ride through Shotover Canyon."
                 }
             }
         ]
@@ -206,7 +206,7 @@ let markersGroup;
 let routesGroup;
 let showRoutes = true;
 
-// 1. Map Initialization with Custom Colored Pin Markers
+// 1. Map Initialization
 function initNzMap() {
     const mapEl = document.getElementById('map');
     if (!mapEl) return;
@@ -225,7 +225,7 @@ function initNzMap() {
     renderMapRoutes();
 }
 
-// 2. Render Custom Colored Number Pins
+// 2. Render Custom Colored Pin Markers
 function renderNzMapMarkers() {
     if (!markersGroup) return;
     markersGroup.clearLayers();
@@ -239,7 +239,6 @@ function renderNzMapMarkers() {
                 ${stop.desc[curLang] || stop.desc['zh']}
             `;
             
-            // Create Custom Colored DivIcon Marker
             const customIcon = L.divIcon({
                 className: 'custom-pin-container',
                 html: `<div class="custom-pin" style="background-color: ${pinColor};">${day.day}</div>`,
@@ -254,7 +253,7 @@ function renderNzMapMarkers() {
     });
 }
 
-// 3. Render Map Routes (Polylines)
+// 3. Render Map Routes
 function renderMapRoutes() {
     if (!routesGroup) return;
     routesGroup.clearLayers();
@@ -273,7 +272,7 @@ function renderMapRoutes() {
     });
 }
 
-// 4. Render Daily Cards & Bind Individual Card Toggle
+// 4. Render Daily Cards
 function renderNzItineraryCards() {
     const daysContainer = document.getElementById('days');
     if (!daysContainer) return;
@@ -299,7 +298,6 @@ function renderNzItineraryCards() {
                 <div class="day-toggle">
                     <span>Day ${day.day} (${day.date})</span>
                     <span class="day-sub-title" style="font-weight:600; margin-left:4px;">${dayTitleText}</span>
-                    <span class="day-sub" style="margin-left:6px; color:#888; font-weight:normal;">${dayTitleText}</span>
                 </div>
                 <label>🏨 ${stayText}</label>
             </h2>
@@ -308,19 +306,18 @@ function renderNzItineraryCards() {
             </div>
         `;
 
-        // Click handler to toggle card open/close
         const toggleBtn = dayCard.querySelector('.day-toggle');
         if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
+            toggleBtn.onclick = () => {
                 dayCard.classList.toggle('open');
-            });
+            };
         }
 
         daysContainer.appendChild(dayCard);
     });
 }
 
-// 5. Render Full Checklist
+// 5. Render Full Checklist with Links
 function renderNzChecklist() {
     const checklistContainer = document.getElementById('tab-checklist');
     if (!checklistContainer) return;
@@ -346,7 +343,7 @@ function renderNzChecklist() {
                     <input type="checkbox" id="${item.id}">
                     <label for="${item.id}">
                         <span>${labelText}</span>
-                        ${detailText ? `<span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span>` : ''}
+                        ${detailText ? `<span class="drill">ⓘ</span>` : ''}
                     </label>
                     ${detailText ? `<div class="detail">${detailText}</div>` : ''}
                 </div>
@@ -372,7 +369,7 @@ function renderNzChecklist() {
     updateOverviewBookingProgress();
 }
 
-// 6. Update Overview "Must Book Progress"
+// 6. Update Overview Progress
 function updateOverviewBookingProgress() {
     const bookingGroup = document.querySelector('.checklist-group[data-group="booking"]');
     const bookCountEls = document.querySelectorAll('.book-count');
@@ -405,7 +402,7 @@ function bindButtons() {
     const btnRoutes = document.getElementById('btnRoutes');
 
     if (btnCards) {
-        btnCards.addEventListener('click', () => {
+        btnCards.onclick = () => {
             const dayCards = document.querySelectorAll('.day');
             const anyClosed = Array.from(dayCards).some(card => !card.classList.contains('open'));
 
@@ -416,18 +413,18 @@ function bindButtons() {
                     card.classList.remove('open');
                 }
             });
-        });
+        };
     }
 
     if (btnRoutes) {
-        btnRoutes.addEventListener('click', () => {
+        btnRoutes.onclick = () => {
             showRoutes = !showRoutes;
             renderMapRoutes();
-        });
+        };
     }
 }
 
-// 8. DOM Handlers
+// 8. DOM Ready Handlers
 document.addEventListener('DOMContentLoaded', () => {
     initNzMap();
     renderNzItineraryCards();
