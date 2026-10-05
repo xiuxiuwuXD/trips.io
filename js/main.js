@@ -63,14 +63,13 @@ function initChecklist() {
         const drill = item.querySelector('.drill');
 
         if (checkbox) {
-            checkbox.addEventListener('change', () => {
+            checkbox.onchange = () => {
                 item.classList.toggle('done', checkbox.checked);
                 updateProgress();
-            });
+            };
         }
 
         if (drill) {
-            // Remove existing listener to prevent duplicate binding
             drill.onclick = (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -93,12 +92,10 @@ function initChecklist() {
 
 // 5. Initialize Application Listeners on DOM Content Loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Priority: Saved preference > Automatically detected browser language
     const savedLang = localStorage.getItem('trip_app_lang');
     const initialLang = savedLang || detectBrowserLanguage();
     setLang(initialLang, false);
 
-    // Bind Language Switch Button Event Listener
     const langBtn = document.getElementById('langBtn');
     if (langBtn) {
         langBtn.addEventListener('click', () => {
@@ -106,11 +103,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Initialize UI Components
     initTabs();
     initChecklist();
 
-    // Bind Checklist Navigation Shortcut Buttons
     const gotoBtns = document.querySelectorAll('.gocl');
     gotoBtns.forEach(btn => {
         btn.addEventListener('click', () => {
