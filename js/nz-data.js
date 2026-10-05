@@ -1,4 +1,4 @@
-// js/nz-data.js - New Zealand Trip Specific Data, Leaflet Map & Itinerary Renderer
+// js/nz-data.js - New Zealand Trip Data, Map Renderer & Full Checklist Data
 
 const NZ_TRIP_DATA = {
     center: [-44.8, 169.2],
@@ -106,10 +106,105 @@ const NZ_TRIP_DATA = {
     ]
 };
 
+// Full Checklist Data (Must Book + Categories)
+const CHECKLIST_DATA = [
+    {
+        group: "booking",
+        title: { zh: "🔴 必须预订", en: "🔴 Must Book" },
+        items: [
+            {
+                id: "cl-milford",
+                label: { zh: "Milford Fly-Cruise-Fly（推荐 Glacier Southern Lakes）", en: "Milford Fly-Cruise-Fly (suggested: Glacier Southern Lakes)" },
+                detail: {
+                    zh: "Day 2 · 12/27（周六） · NZ$1,325/人 · <a href='https://www.glaciersouthernlakes.co.nz/' target='_blank'>官网</a><br>天气取消可免费改期，自己取消 24h 前全额退，飞行当天才扣款<br>确认有没有 10:30am 以后的班次",
+                    en: "Day 2 · Sat 12/27 · NZ$1,325/pp · <a href='https://www.glaciersouthernlakes.co.nz/' target='_blank'>Book</a><br>Weather cancel: free reschedule. Self-cancel 24h+ before: full refund. Charged on flight day<br>Confirm 10:30am+ departure availability"
+                }
+            },
+            {
+                id: "cl-helihike",
+                label: { zh: "Tasman Glacier Heli Hike（推荐 The Helicopter Line）", en: "Tasman Glacier Heli Hike (suggested: The Helicopter Line)" },
+                detail: {
+                    zh: "Day 7 · 1/1（周四） · NZ$945/人 · <a href='https://www.helicopter.co.nz/' target='_blank'>官网</a><br>冰川徒步体验约 2 小时，含防滑冰爪与专业导游",
+                    en: "Day 7 · Thu 1/1 · NZ$945/pp · <a href='https://www.helicopter.co.nz/' target='_blank'>Book</a><br>~2h on-ice guided hike including crampons and gear"
+                }
+            },
+            {
+                id: "cl-skyline",
+                label: { zh: "Skyline Gondola + Luge + 山顶自助晚餐", en: "Skyline Gondola + Luge + Summit Buffet Dinner" },
+                detail: {
+                    zh: "Day 1 · 12/26（周五） · NZ$193-201/人 · 建议预订 5:30pm 或 6:00pm 晚餐",
+                    en: "Day 1 · Fri 12/26 · NZ$193-201/pp · Recommend 5:30pm or 6:00pm dinner slot"
+                }
+            },
+            {
+                id: "cl-earnslaw",
+                label: { zh: "TSS Earnslaw 蒸汽船 + Walter Peak 农场晚餐", en: "TSS Earnslaw Cruise + Walter Peak Farm Dinner" },
+                detail: {
+                    zh: "Day 4 · 12/29（周一） · NZ$175 起/人 · 建议订 5:00pm 班次，返程欣赏黄金时段",
+                    en: "Day 4 · Mon 12/29 · From NZ$175/pp · Recommend 5:00pm departure for golden hour views"
+                }
+            },
+            {
+                id: "cl-hermitage",
+                label: { zh: "Mt Cook Hermitage Alpine 跨年夜自助餐", en: "Mt Cook Hermitage Alpine NYE Buffet Dinner" },
+                detail: {
+                    zh: "Day 6 · 12/31（周三） · NZ$165/人 · 旺季务必提前抢订",
+                    en: "Day 6 · Wed 12/31 · NZ$165/pp · Book early due to high demand"
+                }
+            },
+            {
+                id: "cl-stargazing",
+                label: { zh: "Mt John 暗夜保护区观星团 (Dark Sky Project)", en: "Mt John Observatory Stargazing (Dark Sky Project)" },
+                detail: {
+                    zh: "Day 5 · 12/30（周二） · NZ$239/人 · 包含天文望远镜讲解与热饮",
+                    en: "Day 5 · Tue 12/30 · NZ$239/pp · Includes telescope tour & hot drinks"
+                }
+            },
+            {
+                id: "cl-shotover",
+                label: { zh: "Shotover Jet 峡谷喷气快艇", en: "Shotover Jet Canyon Boat" },
+                detail: {
+                    zh: "Day 3 · 12/28（周日） · NZ$199/人 · 穿梭于 Shotover 狭窄峡谷",
+                    en: "Day 3 · Sun 12/28 · NZ$199/pp · Thrilling ride through Shotover Canyon"
+                }
+            }
+        ]
+    },
+    {
+        group: "accommodation",
+        title: { zh: "🏨 住宿预订 (4 个驻地)", en: "🏨 Accommodation (4 Bases)" },
+        items: [
+            { id: "cl-acc-qt", label: { zh: "皇后镇住宿 (4 晚: 12/26 - 12/29)", en: "Queenstown Stay (4 nights: 12/26 - 12/29)" } },
+            { id: "cl-acc-tekapo", label: { zh: "Tekapo 湖畔住宿 (1 晚: 12/30)", en: "Tekapo Stay (1 night: 12/30)" } },
+            { id: "cl-acc-cook", label: { zh: "Mt Cook / Twizel 住宿 (1 晚: 12/31)", en: "Mt Cook / Twizel Stay (1 night: 12/31)" } },
+            { id: "cl-acc-wanaka", label: { zh: "Wanaka 镇住宿 (2 晚: 1/1 - 1/2)", en: "Wanaka Stay (2 nights: 1/1 - 1/2)" } }
+        ]
+    },
+    {
+        group: "documents",
+        title: { zh: "📄 证件与手续", en: "📄 Documents & Formalities" },
+        items: [
+            { id: "cl-doc-nzeta", label: { zh: "NZeTA 电子签证 + IVL 游客税", en: "NZeTA Visa + IVL Tourist Levy" } },
+            { id: "cl-doc-dl", label: { zh: "驾照原件 + 新西兰认可翻译件 / 国际驾照", en: "Driver's License + NZ Recognized Translation / IDP" } },
+            { id: "cl-doc-ins", label: { zh: "境外旅游保险 (包含高空活动/直升机体验)", en: "Travel Insurance (covering helicopter activities)" } }
+        ]
+    },
+    {
+        group: "clothing",
+        title: { zh: "🧥 衣物与装备", en: "🧥 Clothing & Equipment" },
+        items: [
+            { id: "cl-gear-hike", label: { zh: "专业防滑徒步鞋 / 登山鞋 (Roys Peak & Hooker Valley 必备)", en: "Hiking Boots / Shoes (Essential for Roys Peak & Hooker Valley)" } },
+            { id: "cl-gear-wind", label: { zh: "防风防水外套 / 冲锋衣", en: "Windproof & Waterproof Jacket" } },
+            { id: "cl-gear-sun", label: { zh: "SPF50+ 防晒霜 + 防晒墨镜 + 遮阳帽", en: "SPF50+ Sunscreen + Sunglasses + Sun Hat" } },
+            { id: "cl-gear-swim", label: { zh: "泳衣 & 拖鞋 (Onsen / Tekapo 温泉使用)", en: "Swimwear & Flip-flops (for Onsen / Tekapo Springs)" } }
+        ]
+    }
+];
+
 let map;
 let markersGroup;
 
-// 1. Initialize Leaflet Map
+// 1. Initialize Map
 function initNzMap() {
     const mapEl = document.getElementById('map');
     if (!mapEl) return;
@@ -122,11 +217,10 @@ function initNzMap() {
     }).addTo(map);
 
     markersGroup = L.layerGroup().addTo(map);
-
     renderNzMapMarkers();
 }
 
-// 2. Render Markers on Map
+// 2. Render Markers
 function renderNzMapMarkers() {
     if (!markersGroup) return;
     markersGroup.clearLayers();
@@ -144,7 +238,7 @@ function renderNzMapMarkers() {
     });
 }
 
-// 3. Render Daily Itinerary Cards in #days Container
+// 3. Render Daily Plan Cards
 function renderNzItineraryCards() {
     const daysContainer = document.getElementById('days');
     if (!daysContainer) return;
@@ -182,16 +276,68 @@ function renderNzItineraryCards() {
     });
 }
 
-// Helper Function for Card Left Border Color
+// 4. Render Full Checklist
+function renderNzChecklist() {
+    const checklistContainer = document.getElementById('tab-checklist');
+    if (!checklistContainer) return;
+
+    // Render Progress Bar + Group Containers
+    let html = `
+        <div class="checklist-progress">
+            <span>${curLang === 'zh' ? '完成进度' : 'Progress'}</span>: 
+            <span id="cl-count">0/0</span> 
+            <span class="bar"><span class="fill" id="cl-bar" style="width:0%"></span></span>
+        </div>
+    `;
+
+    CHECKLIST_DATA.forEach(grp => {
+        const titleText = grp.title[curLang] || grp.title['zh'];
+        let itemsHtml = '';
+
+        grp.items.forEach(item => {
+            const labelText = item.label[curLang] || item.label['zh'];
+            const detailText = item.detail ? (item.detail[curLang] || item.detail['zh']) : '';
+
+            itemsHtml += `
+                <div class="checklist-item" data-id="${item.id}">
+                    <input type="checkbox" id="${item.id}">
+                    <label for="${item.id}">
+                        <span>${labelText}</span>
+                        ${detailText ? `<span class="drill" onclick="event.preventDefault();this.closest('.checklist-item').classList.toggle('expanded')">ⓘ</span>` : ''}
+                    </label>
+                    ${detailText ? `<div class="detail">${detailText}</div>` : ''}
+                </div>
+            `;
+        });
+
+        html += `
+            <div class="checklist-group open" data-group="${grp.group}">
+                <h3>${titleText}</h3>
+                <div class="checklist-details">
+                    ${itemsHtml}
+                </div>
+            </div>
+        `;
+    });
+
+    checklistContainer.innerHTML = html;
+
+    // Re-bind Checklist progress and event listeners from main.js
+    if (typeof initChecklist === 'function') {
+        initChecklist();
+    }
+}
+
 function getDayAccentColor(dayNum) {
     const colors = ['#1f6feb', '#e5922e', '#2ea043', '#cf222e', '#8250df', '#d4a72c'];
     return colors[(dayNum - 1) % colors.length];
 }
 
-// 4. Bind Initialization Events
+// 5. DOM Initialization
 document.addEventListener('DOMContentLoaded', () => {
     initNzMap();
     renderNzItineraryCards();
+    renderNzChecklist();
 
     const langBtn = document.getElementById('langBtn');
     if (langBtn) {
@@ -199,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 renderNzItineraryCards();
                 renderNzMapMarkers();
+                renderNzChecklist();
             }, 50);
         });
     }
