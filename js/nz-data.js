@@ -114,10 +114,8 @@ function initNzMap() {
     const mapEl = document.getElementById('map');
     if (!mapEl) return;
 
-    // Create Leaflet Map Instance
     map = L.map('map').setView(NZ_TRIP_DATA.center, NZ_TRIP_DATA.zoom);
 
-    // Add Tile Layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         attribution: '© OpenStreetMap contributors'
@@ -156,7 +154,7 @@ function renderNzItineraryCards() {
     NZ_TRIP_DATA.days.forEach(day => {
         const dayCard = document.createElement('div');
         dayCard.className = 'day open';
-        dayCard.style.borderColor = getDayAccentColor(day.day);
+        dayCard.style.borderLeftColor = getDayAccentColor(day.day);
 
         const stopsList = day.stops.map(stop => `
             <li>
@@ -164,13 +162,16 @@ function renderNzItineraryCards() {
             </li>
         `).join('');
 
+        const dayTitleText = day.title[curLang] || day.title['zh'];
+        const stayText = day.stay[curLang] || day.stay['zh'];
+
         dayCard.innerHTML = `
             <h2>
-                <div class="day-toggle">
+                <div class="day-toggle" onclick="this.closest('.day').classList.toggle('open')">
                     <span>Day ${day.day} (${day.date})</span>
-                    <span class="day-sub">${day.title[curLang] || day.title['zh']}</span>
+                    <span style="font-weight:600; margin-left:4px;">${dayTitleText}</span>
                 </div>
-                <label>🏨 ${day.stay[curLang] || day.stay['zh']}</label>
+                <label>🏨 ${stayText}</label>
             </h2>
             <div class="day-body">
                 <ul>${stopsList}</ul>
@@ -192,7 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initNzMap();
     renderNzItineraryCards();
 
-    // Re-render text on Language Switcher click
     const langBtn = document.getElementById('langBtn');
     if (langBtn) {
         langBtn.addEventListener('click', () => {
