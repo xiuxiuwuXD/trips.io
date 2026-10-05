@@ -23,6 +23,16 @@ html[data-lang="en"] [data-l="zh"] { display: none !important; }
 .tab:hover { background: #f0f3f7; border-color: #b0b8c4; }
 .tab.active { background: linear-gradient(135deg, #1f6feb, #1558c9); color: #fff; border-color: transparent; box-shadow: 0 2px 6px rgba(31,111,235,.25); }
 
+/* Overview Booking Progress Card (.book-card & .gocl Button) */
+.book-card { background: #fff; border-radius: 10px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(0,0,0,.06); border: 1px solid #e0e8f0; margin-bottom: 16px; }
+.book-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.book-count { font-size: 20px; font-weight: 700; color: #1f6feb; min-width: 40px; }
+.book-card .bar { flex: 1; height: 10px; background: #e8ecf2; border-radius: 5px; overflow: hidden; }
+.book-card .fill { display: block; height: 100%; background: linear-gradient(90deg, #1f6feb, #388bfd); border-radius: 5px; transition: width .3s ease; }
+.book-urgent { font-size: 12px; color: #666; margin-bottom: 10px; }
+.gocl { display: inline-block; font-size: 12px; font-weight: 500; padding: 7px 16px; background: #f0f6ff; border: 1px solid #1f6feb; color: #1f6feb; border-radius: 20px; cursor: pointer; transition: all .15s ease; text-decoration: none; }
+.gocl:hover { background: #1f6feb; color: #fff; }
+
 /* Daily Plan Cards Style */
 .day { border-left: 5px solid #1f6feb; background: #fff; border-radius: 6px; padding: 10px 12px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,.08); transition: all 0.2s ease; }
 .day h2 { font-size: 14px; margin: 0; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -76,7 +86,7 @@ html[data-lang="en"] [data-l="zh"] { display: none !important; }
 .hl { margin: 0; padding: 0; list-style: none; font-size: 13px; line-height: 1.7; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .hl li { background: #fff; border-radius: 8px; padding: 6px 10px; box-shadow: 0 1px 4px rgba(0,0,0,.05); border-left: 3px solid #e0e0e0; font-size: 12px; }
 
-/* Table & Fold */
+/* Table & Fold Component */
 table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
 th, td { border-bottom: 1px solid #eee; padding: 7px 8px; text-align: left; vertical-align: top; }
 th { background: linear-gradient(135deg, #f0f3f7, #e8ecf2); font-weight: 600; color: #444; font-size: 11px; text-transform: uppercase; }
@@ -109,6 +119,7 @@ details.fold > summary { cursor: pointer; list-style: none; user-select: none; d
 .checklist-item .detail a { color: #1a73e8; text-decoration: none; font-weight: 500; }
 .checklist-item label .drill { display: inline-block; font-size: 11px; color: #1f6feb; background: #e8f0fe; border-radius: 9px; padding: 0 6px; margin-left: 6px; cursor: pointer; text-decoration: none; }
 
+/* Responsive Breakpoints */
 @media (max-width: 800px) {
     body { flex-direction: column-reverse; }
     #sidebar { width: 100%; height: 60vh; }
