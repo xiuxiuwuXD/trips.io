@@ -1,4 +1,4 @@
-// js/nz-data.js - New Zealand Trip Data, Map, Full Checklist with Links & Controls
+// js/nz-data.js - New Zealand Trip Data, Map, Complete 14-Item Checklist & Summary Logic
 
 const NZ_TRIP_DATA = {
     center: [-44.8, 169.2],
@@ -106,11 +106,11 @@ const NZ_TRIP_DATA = {
     ]
 };
 
-// Full Checklist Data containing official links for all 7 major bookings
+// Full Checklist Data including Onsen, Lavender, Car Rental & Accommodation
 const CHECKLIST_DATA = [
     {
         group: "booking",
-        title: { zh: "🔴 必须预订", en: "🔴 Must Book" },
+        title: { zh: "🔴 必须预订 (9 项)", en: "🔴 Must Book (9 items)" },
         items: [
             {
                 id: "cl-milford",
@@ -167,36 +167,34 @@ const CHECKLIST_DATA = [
                     zh: "Day 3 · 12/28（周日） · NZ$199/人 · <a href='https://www.shotoverjet.com/' target='_blank'>官网预订</a><br>穿梭于 Shotover 狭窄峡谷体验极致刺激。",
                     en: "Day 3 · Sun 12/28 · NZ$199/pp · <a href='https://www.shotoverjet.com/' target='_blank'>Official Booking</a><br>Thrilling ride through Shotover Canyon."
                 }
+            },
+            {
+                id: "cl-onsen",
+                label: { zh: "Onsen Hot Pools 峡湾温泉 (皇后镇日落场)", en: "Onsen Hot Pools (Queenstown Sunset Slot)" },
+                detail: {
+                    zh: "Day 2 或 Day 3 · NZ$150/汤池 · <a href='https://www.onsen.co.nz/' target='_blank'>官网预订</a><br>提示：傍晚黄金时段极难抢，建议提前 2-3 个月预订。",
+                    en: "Day 2 or Day 3 · NZ$150/pool · <a href='https://www.onsen.co.nz/' target='_blank'>Official Booking</a><br>Tip: Sunset time slots fill up extremely fast, book 2-3 months ahead."
+                }
+            },
+            {
+                id: "cl-lavender",
+                label: { zh: "Wanaka Lavender Farm 薰衣草农场门票", en: "Wanaka Lavender Farm Tickets" },
+                detail: {
+                    zh: "Day 9 · 1/3（周六） · NZ$15/人 · <a href='https://www.wanakalavenderfarm.com/' target='_blank'>官网详情</a><br>提示：12月下旬至1月为盛花期，推荐现场/官网直接购买，品尝薰衣草冰淇淋。",
+                    en: "Day 9 · Sat 1/3 · NZ$15/pp · <a href='https://www.wanakalavenderfarm.com/' target='_blank'>Official Site</a><br>Tip: Peak bloom is late Dec to Jan. Try lavender ice cream on site."
+                }
             }
         ]
     },
     {
         group: "accommodation",
-        title: { zh: "🏨 住宿预订 (4 个驻地)", en: "🏨 Accommodation (4 Bases)" },
+        title: { zh: "🏨 住宿与交通预订 (5 项)", en: "🏨 Accommodation & Rental Car (5 items)" },
         items: [
             { id: "cl-acc-qt", label: { zh: "皇后镇住宿 (4 晚: 12/26 - 12/29)", en: "Queenstown Stay (4 nights: 12/26 - 12/29)" } },
             { id: "cl-acc-tekapo", label: { zh: "Tekapo 湖畔住宿 (1 晚: 12/30)", en: "Tekapo Stay (1 night: 12/30)" } },
             { id: "cl-acc-cook", label: { zh: "Mt Cook / Twizel 住宿 (1 晚: 12/31)", en: "Mt Cook / Twizel Stay (1 night: 12/31)" } },
-            { id: "cl-acc-wanaka", label: { zh: "Wanaka 镇住宿 (2 晚: 1/1 - 1/2)", en: "Wanaka Stay (2 nights: 1/1 - 1/2)" } }
-        ]
-    },
-    {
-        group: "documents",
-        title: { zh: "📄 证件与手续", en: "📄 Documents & Formalities" },
-        items: [
-            { id: "cl-doc-nzeta", label: { zh: "NZeTA 电子签证 + IVL 游客税", en: "NZeTA Visa + IVL Tourist Levy" } },
-            { id: "cl-doc-dl", label: { zh: "驾照原件 + 新西兰认可翻译件 / 国际驾照", en: "Driver's License + NZ Recognized Translation / IDP" } },
-            { id: "cl-doc-ins", label: { zh: "境外旅游保险 (包含高空活动/直升机体验)", en: "Travel Insurance (covering helicopter activities)" } }
-        ]
-    },
-    {
-        group: "clothing",
-        title: { zh: "🧥 衣物与装备", en: "🧥 Clothing & Equipment" },
-        items: [
-            { id: "cl-gear-hike", label: { zh: "专业防滑徒步鞋 / 登山鞋 (Roys Peak & Hooker Valley 必备)", en: "Hiking Boots / Shoes (Essential for Roys Peak & Hooker Valley)" } },
-            { id: "cl-gear-wind", label: { zh: "防风防水外套 / 冲锋衣", en: "Windproof & Waterproof Jacket" } },
-            { id: "cl-gear-sun", label: { zh: "SPF50+ 防晒霜 + 防晒墨镜 + 遮阳帽", en: "SPF50+ Sunscreen + Sunglasses + Sun Hat" } },
-            { id: "cl-gear-swim", label: { zh: "泳衣 & 拖鞋 (Onsen / Tekapo 温泉使用)", en: "Swimwear & Flip-flops (for Onsen / Tekapo Springs)" } }
+            { id: "cl-acc-wanaka", label: { zh: "Wanaka 镇住宿 (2 晚: 1/1 - 1/2)", en: "Wanaka Stay (2 nights: 1/1 - 1/2)" } },
+            { id: "cl-car-rental", label: { zh: "皇后镇机场提还 SUV 租车 (12/26 - 1/3)", en: "Queenstown Airport SUV Rental (12/26 - 1/3)" }, detail: { zh: "推荐购买全险（Zero Excess），预订含雪链/GPS的四驱或中大型SUV", en: "Recommend Zero Excess insurance and 4WD/SUV" } }
         ]
     }
 ];
@@ -369,16 +367,16 @@ function renderNzChecklist() {
     updateOverviewBookingProgress();
 }
 
-// 6. Update Overview Progress
+// 6. Synchronize Summary Page Progress Card (Must Book + Lodging + Car Rental)
 function updateOverviewBookingProgress() {
-    const bookingGroup = document.querySelector('.checklist-group[data-group="booking"]');
+    const allChecklistItems = document.querySelectorAll('.checklist-item');
     const bookCountEls = document.querySelectorAll('.book-count');
     const fillEls = document.querySelectorAll('.book-card .fill');
 
-    if (!bookingGroup) return;
+    if (!allChecklistItems.length) return;
 
-    const total = bookingGroup.querySelectorAll('.checklist-item').length;
-    const checked = bookingGroup.querySelectorAll('.checklist-item input[type="checkbox"]:checked').length;
+    const total = allChecklistItems.length;
+    const checked = document.querySelectorAll('.checklist-item input[type="checkbox"]:checked').length;
 
     bookCountEls.forEach(el => {
         el.textContent = `${checked}/${total}`;
